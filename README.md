@@ -4,7 +4,7 @@ Simple text editor with a fancy/cool and modern look than the traditional one fr
 
 <div align="center">
 
-  ![FancyNotes Screenshot](https://github.com/rabifa/fancynotes/blob/main/FancyNotes.png "FancyNotes Screenshot")
+  ![Vault Notes Screenshot](https://github.com/rabifa/fancynotes/blob/main/FancyNotes.png "Vault Notes Screenshot")
 
   <!-- License -->
   <a href="./LICENSE" target="_blank">
@@ -12,7 +12,7 @@ Simple text editor with a fancy/cool and modern look than the traditional one fr
   </a>
 </div>
 
-You can also see on Figma: [https://www.figma.com/file/PpgeYgFa4v3ie940ST2KNE/Raven-Notes](https://www.figma.com/design/PpgeYgFa4v3ie940ST2KNE/FancyNotes)
+You can also see on Figma: [Click here](https://www.figma.com/design/PpgeYgFa4v3ie940ST2KNE/Vault-Notes)
 
 ## Tecnology
 
