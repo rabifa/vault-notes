@@ -1,4 +1,4 @@
-# Valt Notes
+# Vault Notes
 
 Simple text editor with a fancy/cool and modern look than the traditional one from Mycrosoft Windowns.
 
