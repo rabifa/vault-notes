@@ -3,7 +3,9 @@ import { PanelLeftClose } from 'lucide-react'
 import SearchBar from './SearchBar'
 import NoteCard from './NoteCard'
 import VaultSelector from './VaultSelector'
+import SortButton from './SortButton'
 import { NoteMetadata, VaultState } from '../../types/vault'
+import { NotesSortOption } from '../../hooks/useNotes'
 
 const MIN_SIDEBAR_WIDTH = 170
 const MAX_SIDEBAR_WIDTH = 400
@@ -18,8 +20,10 @@ interface SidebarProps {
   notes: NoteMetadata[]
   activeNotePath: string | null
   searchQuery: string
+  sortOption: NotesSortOption
   isCompact?: boolean
   onSearchChange: (query: string) => void
+  onSortChange: (option: NotesSortOption) => void
   onSelectNote: (notePath: string) => void
   onToggleFavorite: (notePath: string) => void
   onSelectVault: (path: string) => void
@@ -37,8 +41,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   notes,
   activeNotePath,
   searchQuery,
+  sortOption,
   isCompact = false,
   onSearchChange,
+  onSortChange,
   onSelectNote,
   onToggleFavorite,
   onSelectVault,
@@ -106,6 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
             <SearchBar value={searchQuery} onChange={onSearchChange} />
+            <SortButton sortOption={sortOption} onChange={onSortChange} />
           </div>
         </div>
 

@@ -66,6 +66,20 @@
   color: var(--cyan-neon);
 }
 
+.sort-btn-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sort-popover {
+  min-width: 150px;
+}
+
+.note-card-popover-item.active {
+  color: var(--cyan-neon);
+  background-color: rgba(0, 229, 255, 0.08);
+}
+
 /* SearchBar Styles */
 .searchbar-container {
   flex: 1;

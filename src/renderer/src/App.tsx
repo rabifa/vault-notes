@@ -28,8 +28,10 @@ export const App = () => {
     activeNote,
     activeNoteContent,
     searchQuery,
+    sortOption,
     saveStatus,
     setSearchQuery,
+    setSortOption,
     selectNote,
     createNote,
     deleteNote,
@@ -163,8 +165,10 @@ export const App = () => {
             notes={notes}
             activeNotePath={activeNotePath}
             searchQuery={searchQuery}
+            sortOption={sortOption}
             isCompact={isCompact}
             onSearchChange={setSearchQuery}
+            onSortChange={setSortOption}
             onSelectNote={selectNote}
             onToggleFavorite={toggleFavorite}
             onSelectVault={selectActiveVault}

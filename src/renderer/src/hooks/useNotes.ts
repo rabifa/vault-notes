@@ -3,11 +3,20 @@ import { NoteMetadata } from '../types/vault'
 import { SaveStatus } from '../components/editor/EditorFooter'
 import { toPreviewText } from '../utils/markdown'
 
+export type NotesSortOption = 'title-asc' | 'title-desc' | 'created-desc' | 'created-asc'
+
+const SORT_STORAGE_KEY = 'notesSortOption'
+const SORT_OPTIONS: NotesSortOption[] = ['title-asc', 'title-desc', 'created-desc', 'created-asc']
+
 export const useNotes = (activeVaultPath: string | null) => {
   const [notes, setNotes] = useState<NoteMetadata[]>([])
   const [activeNotePath, setActiveNotePath] = useState<string | null>(null)
   const [activeNoteContent, setActiveNoteContent] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortOption, setSortOption] = useState<NotesSortOption>(() => {
+    const stored = window.localStorage.getItem(SORT_STORAGE_KEY) as NotesSortOption | null
+    return stored && SORT_OPTIONS.includes(stored) ? stored : 'created-desc'
+  })
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isLoadingNotes, setIsLoadingNotes] = useState<boolean>(false)
   const [isLoadingContent, setIsLoadingContent] = useState<boolean>(false)
@@ -324,7 +333,13 @@ export const useNotes = (activeVaultPath: string | null) => {
     }
   }, [saveStatus])
 
-  // Fast, reactive notes filtering + favorites-first ordering (stable within each group)
+  useEffect(() => {
+    window.localStorage.setItem(SORT_STORAGE_KEY, sortOption)
+  }, [sortOption])
+
+  // Fast, reactive notes filtering + sorting + favorites-first ordering
+  // (both sorts are stable, so the chosen criteria order survives within
+  // each favorite/non-favorite group)
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     const matched = query
@@ -334,8 +349,22 @@ export const useNotes = (activeVaultPath: string | null) => {
         )
       : notes
 
-    return [...matched].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
-  }, [notes, searchQuery])
+    const sorted = [...matched].sort((a, b) => {
+      switch (sortOption) {
+        case 'title-asc':
+          return a.title.localeCompare(b.title, 'pt-BR')
+        case 'title-desc':
+          return b.title.localeCompare(a.title, 'pt-BR')
+        case 'created-asc':
+          return a.createdAt - b.createdAt
+        case 'created-desc':
+        default:
+          return b.createdAt - a.createdAt
+      }
+    })
+
+    return sorted.sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
+  }, [notes, searchQuery, sortOption])
 
   // Get active note metadata
   const activeNote = useMemo(() => {
@@ -349,10 +378,12 @@ export const useNotes = (activeVaultPath: string | null) => {
     activeNote,
     activeNoteContent,
     searchQuery,
+    sortOption,
     saveStatus,
     isLoadingNotes,
     isLoadingContent,
     setSearchQuery,
+    setSortOption,
     selectNote,
     createNote,
     deleteNote,
