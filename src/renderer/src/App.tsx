@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Titlebar, Sidebar, TipTapEditor, EditorFooter, OnboardingModal } from './components'
+import {
+  Titlebar,
+  Sidebar,
+  TipTapEditor,
+  EditorFooter,
+  OnboardingModal,
+  ConfirmDialog,
+  ToastContainer
+} from './components'
+import { ConfirmDialogState } from './components/modals/ConfirmDialog'
 import useVault from './hooks/useVault'
 import useNotes from './hooks/useNotes'
+import useToast from './hooks/useToast'
 
 // Below this window width there isn't room for both the sidebar and a
 // usable text area, so the sidebar auto-hides. Only reacts to actually
@@ -28,6 +38,9 @@ export const App = () => {
     exportTxt,
     handleContentChange
   } = useNotes(vaultState.activeVaultPath)
+
+  const { toasts, showToast, dismissToast } = useToast()
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null)
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [wordCount, setWordCount] = useState(0)
@@ -70,31 +83,40 @@ export const App = () => {
     await createNote('Sem Titulo', 'md')
   }
 
-  const handleDeleteNoteByPath = async (notePath: string) => {
-    const confirmDelete = window.confirm('Tem certeza que deseja mover esta nota para a lixeira?')
-    if (confirmDelete) {
-      await deleteNote(notePath)
-    }
+  const handleDeleteNoteByPath = (notePath: string) => {
+    setConfirmDialog({
+      title: 'EXCLUIR NOTA',
+      message: 'Tem certeza que deseja mover esta nota para a lixeira?',
+      confirmLabel: 'EXCLUIR',
+      onConfirm: async () => {
+        setConfirmDialog(null)
+        await deleteNote(notePath)
+      }
+    })
   }
 
-  const handleDeleteNote = async () => {
+  const handleDeleteNote = () => {
     if (activeNotePath) {
-      await handleDeleteNoteByPath(activeNotePath)
+      handleDeleteNoteByPath(activeNotePath)
     }
   }
 
-  const handleRemoveVault = async (vaultPath: string) => {
-    const confirmRemove = window.confirm(
-      vaultState.vaults.length <= 1
+  const handleRemoveVault = (vaultPath: string) => {
+    const isLastVault = vaultState.vaults.length <= 1
+    setConfirmDialog({
+      title: 'REMOVER VAULT',
+      message: isLastVault
         ? 'Este é o último vault da lista. Removê-lo não apagará os arquivos, mas nenhum vault ficará selecionado. Deseja continuar?'
-        : 'Remover este vault da lista? Os arquivos não serão apagados do disco.'
-    )
-    if (!confirmRemove) return
-
-    const state = await removeVault(vaultPath)
-    if (state && !state.activeVaultPath) {
-      window.alert('Nenhum vault restante. Adicione um vault para continuar.')
-    }
+        : 'Remover este vault da lista? Os arquivos não serão apagados do disco.',
+      confirmLabel: 'REMOVER',
+      onConfirm: async () => {
+        setConfirmDialog(null)
+        const state = await removeVault(vaultPath)
+        if (state && !state.activeVaultPath) {
+          showToast('Nenhum vault restante. Adicione um vault para continuar.', 'warning')
+        }
+      }
+    })
   }
 
   const handleDuplicateNote = async () => {
@@ -114,7 +136,7 @@ export const App = () => {
     if (activeNotePath) {
       const exportedPath = await exportTxt()
       if (exportedPath) {
-        window.alert(`Nota exportada com sucesso para:\n${exportedPath}`)
+        showToast(`Nota exportada com sucesso para:\n${exportedPath}`, 'success')
       }
     }
   }
@@ -172,6 +194,8 @@ export const App = () => {
       </div>
 
       <OnboardingModal isOpen={activeVaultPath === null} onSelectFolder={selectVaultFolder} />
+      <ConfirmDialog state={confirmDialog} onCancel={() => setConfirmDialog(null)} />
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
