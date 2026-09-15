@@ -246,9 +246,9 @@ export const useNotes = (activeVaultPath: string | null) => {
     }
   }, [])
 
-  // Export note to plain text file
-  const exportTxt = useCallback(
-    async (notePath: string) => {
+  // Download a copy of a note's raw content under a chosen extension
+  const downloadNote = useCallback(
+    async (notePath: string, extension: 'md' | 'txt') => {
       try {
         const currentPath = activeNotePathRef.current
         const currentContent = activeNoteContentRef.current
@@ -263,11 +263,49 @@ export const useNotes = (activeVaultPath: string | null) => {
         const contentToExport =
           currentPath === notePath ? currentContent : await window.api.vault.readNote(notePath)
 
-        const filePath = await window.api.vault.exportTxt(notePath, contentToExport)
-        return filePath
+        return await window.api.vault.exportNote(notePath, contentToExport, extension)
       } catch (error) {
-        console.error('Failed to export txt:', error)
+        console.error('Failed to download note:', error)
         return null
+      }
+    },
+    [saveStatus]
+  )
+
+  // Change a note's file extension in place (no content conversion)
+  const changeExtension = useCallback(
+    async (notePath: string, newExtension: 'md' | 'txt') => {
+      try {
+        const currentPath = activeNotePathRef.current
+
+        if (saveStatus === 'dirty' && currentPath === notePath) {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+          }
+          await saveNoteImmediately(currentPath, activeNoteContentRef.current)
+        }
+
+        const result = await window.api.vault.changeExtension(notePath, newExtension)
+
+        if (currentPath === notePath) {
+          activeNotePathRef.current = result.path
+          setActiveNotePath(result.path)
+        }
+
+        setNotes((prevNotes) =>
+          prevNotes.map((note) =>
+            note.path === notePath
+              ? {
+                  ...note,
+                  path: result.path,
+                  extension: result.extension,
+                  updatedAt: result.updatedAt
+                }
+              : note
+          )
+        )
+      } catch (error) {
+        console.error('Failed to change note extension:', error)
       }
     },
     [saveStatus]
@@ -320,7 +358,8 @@ export const useNotes = (activeVaultPath: string | null) => {
     deleteNote,
     renameNote,
     toggleFavorite,
-    exportTxt: () => activeNotePath && exportTxt(activeNotePath),
+    downloadNote,
+    changeExtension,
     handleContentChange
   }
 }

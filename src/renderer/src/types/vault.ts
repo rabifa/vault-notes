@@ -28,7 +28,11 @@ export interface VaultAPI {
     notePath: string,
     newTitle: string
   ) => Promise<{ path: string; title: string; updatedAt: number }>
-  exportTxt: (notePath: string, content: string) => Promise<string | null>
+  exportNote: (notePath: string, content: string, extension: string) => Promise<string | null>
+  changeExtension: (
+    notePath: string,
+    newExtension: string
+  ) => Promise<{ path: string; extension: string; updatedAt: number }>
   toggleFavorite: (notePath: string) => Promise<boolean>
   watchChanges: (vaultPath: string) => Promise<void>
   openFolder: (vaultPath: string) => Promise<string>

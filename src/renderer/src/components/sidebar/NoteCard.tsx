@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Star, FileText, Trash2 } from 'lucide-react'
+import { Star, FileText, Trash2, Download } from 'lucide-react'
 import { NoteMetadata } from '../../types/vault'
 
 interface NoteCardProps {
@@ -9,6 +9,8 @@ interface NoteCardProps {
   onToggleFavorite: (e: React.MouseEvent) => void
   onRename: (newTitle: string) => void
   onDelete: () => void
+  onChangeExtension: (newExtension: 'md' | 'txt') => void
+  onDownload: (extension: 'md' | 'txt') => void
 }
 
 export const NoteCard: React.FC<NoteCardProps> = ({
@@ -17,11 +19,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onClick,
   onToggleFavorite,
   onRename,
-  onDelete
+  onDelete,
+  onChangeExtension,
+  onDownload
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState(note.title)
+  const [openPopover, setOpenPopover] = useState<'extension' | 'download' | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const extPopoverRef = useRef<HTMLDivElement>(null)
+  const downloadPopoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isEditing) {
@@ -35,6 +42,33 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       inputRef.current?.select()
     }
   }, [isEditing])
+
+  useEffect(() => {
+    if (!openPopover) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const ref = openPopover === 'extension' ? extPopoverRef : downloadPopoverRef
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpenPopover(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openPopover])
+
+  const targetExtension: 'md' | 'txt' = note.extension.toLowerCase() === '.md' ? 'txt' : 'md'
+
+  const handleChangeExtension = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setOpenPopover(null)
+    onChangeExtension(targetExtension)
+  }
+
+  const handleDownload = (e: React.MouseEvent, extension: 'md' | 'txt') => {
+    e.stopPropagation()
+    setOpenPopover(null)
+    onDownload(extension)
+  }
 
   const startEditing = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -91,12 +125,34 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="note-card-title" onDoubleClick={startEditing} title="Duplo clique para renomear">
+            <span
+              className="note-card-title"
+              onDoubleClick={startEditing}
+              title="Duplo clique para renomear"
+            >
               {note.title}
             </span>
           )}
         </div>
-        <span className="note-card-ext">{note.extension.toUpperCase()}</span>
+        <div className="note-ext-popover-wrap" ref={extPopoverRef}>
+          <button
+            className="note-card-ext"
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpenPopover(openPopover === 'extension' ? null : 'extension')
+            }}
+            title="Mudar extensão do arquivo"
+          >
+            {note.extension.toUpperCase()}
+          </button>
+          {openPopover === 'extension' && (
+            <div className="note-card-popover note-ext-popover">
+              <button className="note-card-popover-item" onClick={handleChangeExtension}>
+                MUDAR PARA .{targetExtension.toUpperCase()}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <p className="note-card-preview">{note.preview || 'Nenhum conteúdo...'}</p>
@@ -104,6 +160,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       <div className="note-card-footer">
         <span className="note-card-date">{formatTime(note.updatedAt)}</span>
         <div className="note-card-actions">
+          <div className="note-download-popover-wrap" ref={downloadPopoverRef}>
+            <button
+              className="note-card-download-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setOpenPopover(openPopover === 'download' ? null : 'download')
+              }}
+              title="Baixar cópia da nota"
+            >
+              <Download size={14} />
+            </button>
+            {openPopover === 'download' && (
+              <div className="note-card-popover note-download-popover">
+                <button className="note-card-popover-item" onClick={(e) => handleDownload(e, 'md')}>
+                  BAIXAR .MD
+                </button>
+                <button
+                  className="note-card-popover-item"
+                  onClick={(e) => handleDownload(e, 'txt')}
+                >
+                  BAIXAR .TXT
+                </button>
+              </div>
+            )}
+          </div>
           <button
             className={`favorite-btn ${note.isFavorite ? 'is-favorite' : ''}`}
             onClick={(e) => {

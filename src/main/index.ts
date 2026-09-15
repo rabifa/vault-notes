@@ -13,7 +13,8 @@ import {
   createNote,
   deleteNote,
   renameNote,
-  exportTxt,
+  exportNote,
+  changeNoteExtension,
   toggleFavorite,
   watchVault,
   unwatchVault
@@ -65,8 +66,15 @@ function registerIpcHandlers(): void {
     return renameNote(notePath, newTitle)
   })
 
-  ipcMain.handle('vault:export-txt', async (_, notePath: string, content: string) => {
-    return exportTxt(notePath, content, mainWindow || undefined)
+  ipcMain.handle(
+    'vault:export-note',
+    async (_, notePath: string, content: string, extension: string) => {
+      return exportNote(notePath, content, extension, mainWindow || undefined)
+    }
+  )
+
+  ipcMain.handle('vault:change-extension', async (_, notePath: string, newExtension: string) => {
+    return changeNoteExtension(notePath, newExtension)
   })
 
   ipcMain.handle('vault:toggle-favorite', async (_, notePath: string) => {

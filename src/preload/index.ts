@@ -17,8 +17,10 @@ const api = {
     deleteNote: (notePath: string) => ipcRenderer.invoke('vault:delete-note', notePath),
     renameNote: (notePath: string, newTitle: string) =>
       ipcRenderer.invoke('vault:rename-note', notePath, newTitle),
-    exportTxt: (notePath: string, content: string) =>
-      ipcRenderer.invoke('vault:export-txt', notePath, content),
+    exportNote: (notePath: string, content: string, extension: string) =>
+      ipcRenderer.invoke('vault:export-note', notePath, content, extension),
+    changeExtension: (notePath: string, newExtension: string) =>
+      ipcRenderer.invoke('vault:change-extension', notePath, newExtension),
     toggleFavorite: (notePath: string) => ipcRenderer.invoke('vault:toggle-favorite', notePath),
     watchChanges: (vaultPath: string) => ipcRenderer.invoke('vault:watch-changes', vaultPath),
     openFolder: (vaultPath: string) => ipcRenderer.invoke('vault:open-folder', vaultPath),

@@ -316,20 +316,29 @@ export async function renameNote(
 }
 
 /**
- * Exports note content to a custom .txt path selected by the user.
+ * Saves a copy of note content to a path chosen by the user, in the given
+ * format. Content is written as-is - no conversion between Markdown and
+ * plain text is performed.
  */
-export async function exportTxt(
+export async function exportNote(
   notePath: string,
   content: string,
+  extension: string,
   window?: BrowserWindow
 ): Promise<string | null> {
-  const defaultName = `${path.basename(notePath, path.extname(notePath))}.txt`
+  const ext = extension.startsWith('.') ? extension.toLowerCase() : `.${extension.toLowerCase()}`
+  const defaultName = `${path.basename(notePath, path.extname(notePath))}${ext}`
   const defaultPath = path.join(path.dirname(notePath), defaultName)
 
   const options: Electron.SaveDialogOptions = {
-    title: 'Exportar Nota para Texto',
+    title: 'Baixar Nota',
     defaultPath,
-    filters: [{ name: 'Arquivos de Texto (*.txt)', extensions: ['txt'] }]
+    filters: [
+      {
+        name: ext === '.md' ? 'Markdown (*.md)' : 'Arquivos de Texto (*.txt)',
+        extensions: [ext.replace('.', '')]
+      }
+    ]
   }
 
   const result = window
@@ -342,6 +351,49 @@ export async function exportTxt(
 
   await fs.promises.writeFile(result.filePath, content, 'utf-8')
   return result.filePath
+}
+
+/**
+ * Changes a note's file extension in place, renaming it on disk. Content is
+ * left untouched - no conversion between Markdown and plain text.
+ */
+export async function changeNoteExtension(
+  notePath: string,
+  newExtension: string
+): Promise<{ path: string; extension: string; updatedAt: number }> {
+  if (!fs.existsSync(notePath)) {
+    throw new Error(`Note not found: ${notePath}`)
+  }
+
+  const ext = newExtension.startsWith('.')
+    ? newExtension.toLowerCase()
+    : `.${newExtension.toLowerCase()}`
+  const dir = path.dirname(notePath)
+  const baseName = path.basename(notePath, path.extname(notePath))
+  let newPath = path.join(dir, `${baseName}${ext}`)
+
+  if (newPath === notePath) {
+    const stats = await fs.promises.stat(notePath)
+    return { path: notePath, extension: ext, updatedAt: stats.mtimeMs }
+  }
+
+  let counter = 1
+  while (fs.existsSync(newPath)) {
+    newPath = path.join(dir, `${baseName} ${counter}${ext}`)
+    counter++
+  }
+
+  await fs.promises.rename(notePath, newPath)
+  const stats = await fs.promises.stat(newPath)
+
+  // Update favorites if it was favorited
+  const favorites = store.get('favorites') as string[]
+  if (favorites.includes(notePath)) {
+    const updatedFavorites = favorites.map((p) => (p === notePath ? newPath : p))
+    store.set('favorites', updatedFavorites)
+  }
+
+  return { path: newPath, extension: ext, updatedAt: stats.mtimeMs }
 }
 
 /**

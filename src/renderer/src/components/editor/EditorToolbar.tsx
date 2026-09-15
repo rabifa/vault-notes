@@ -22,7 +22,6 @@ interface EditorToolbarProps {
   onToggleSidebar?: () => void
   onDeleteNote?: () => void
   onDuplicateNote?: () => void
-  onExportTxt?: () => void
   onCreateNote?: () => void
   isSidebarOpen?: boolean
 }

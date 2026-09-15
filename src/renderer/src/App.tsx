@@ -35,7 +35,8 @@ export const App = () => {
     deleteNote,
     renameNote,
     toggleFavorite,
-    exportTxt,
+    downloadNote,
+    changeExtension,
     handleContentChange
   } = useNotes(vaultState.activeVaultPath)
 
@@ -132,13 +133,16 @@ export const App = () => {
     }
   }
 
-  const handleExportTxt = async () => {
-    if (activeNotePath) {
-      const exportedPath = await exportTxt()
-      if (exportedPath) {
-        showToast(`Nota exportada com sucesso para:\n${exportedPath}`, 'success')
-      }
+  const handleDownloadNote = async (notePath: string, extension: 'md' | 'txt') => {
+    const downloadedPath = await downloadNote(notePath, extension)
+    if (downloadedPath) {
+      showToast(`Nota baixada com sucesso para:\n${downloadedPath}`, 'success')
     }
+  }
+
+  const handleChangeNoteExtension = async (notePath: string, newExtension: 'md' | 'txt') => {
+    await changeExtension(notePath, newExtension)
+    showToast(`Extensão alterada para .${newExtension.toUpperCase()}.`, 'success')
   }
 
   const handleStatsChange = (words: number, chars: number) => {
@@ -168,6 +172,8 @@ export const App = () => {
             onRemoveVault={handleRemoveVault}
             onRenameNote={renameNote}
             onDeleteNote={handleDeleteNoteByPath}
+            onChangeExtension={handleChangeNoteExtension}
+            onDownloadNote={handleDownloadNote}
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           />
         )}
@@ -181,7 +187,6 @@ export const App = () => {
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             onDeleteNote={handleDeleteNote}
             onDuplicateNote={handleDuplicateNote}
-            onExportTxt={handleExportTxt}
             onCreateNote={handleCreateNote}
             onContentChange={handleContentChange}
             onStatsChange={handleStatsChange}

@@ -199,6 +199,11 @@
   padding: 0;
 }
 
+.note-ext-popover-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .note-card-ext {
   font-family: var(--font-family-header);
   font-size: 9px;
@@ -208,13 +213,60 @@
   border-radius: 3px;
   border: 1px solid rgba(0, 229, 255, 0.3);
   font-weight: 700;
-  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.note-card-ext:hover {
+  background-color: rgba(0, 229, 255, 0.3);
 }
 
 .note-card.active .note-card-ext {
   background-color: rgba(255, 0, 127, 0.15);
   color: var(--pink-neon);
   border-color: rgba(255, 0, 127, 0.3);
+}
+
+.note-card.active .note-card-ext:hover {
+  background-color: rgba(255, 0, 127, 0.3);
+}
+
+.note-card-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 78px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.note-card-popover-item {
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-family-header);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.note-card-popover-item:hover {
+  background-color: var(--bg-control);
+  color: var(--cyan-neon);
 }
 
 .note-card-preview {
@@ -285,6 +337,29 @@
 .note-card-delete-btn:hover {
   color: var(--pink-neon);
   background-color: rgba(255, 0, 127, 0.1);
+}
+
+.note-download-popover-wrap {
+  position: relative;
+}
+
+
+.note-card-download-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.note-card-download-btn:hover {
+  color: var(--cyan-neon);
+  background-color: rgba(0, 229, 255, 0.1);
 }
 
 /* Vault Selector Styles */

@@ -20,7 +20,6 @@ interface TipTapEditorProps {
   onToggleSidebar?: () => void
   onDeleteNote?: () => void
   onDuplicateNote?: () => void
-  onExportTxt?: () => void
   onCreateNote?: () => void
   onContentChange: (newContent: string) => void
   onStatsChange?: (wordCount: number, charCount: number) => void
@@ -34,7 +33,6 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
   onToggleSidebar,
   onDeleteNote,
   onDuplicateNote,
-  onExportTxt,
   onCreateNote,
   onContentChange,
   onStatsChange
@@ -150,7 +148,6 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         onToggleSidebar={onToggleSidebar}
         onDeleteNote={onDeleteNote}
         onDuplicateNote={onDuplicateNote}
-        onExportTxt={onExportTxt}
         onCreateNote={onCreateNote}
       />
       <div className="editor-workspace scrollbar-custom">
