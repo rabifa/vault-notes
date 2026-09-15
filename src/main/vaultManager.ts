@@ -126,6 +126,21 @@ export function setActiveVault(vaultPath: string): VaultState {
 }
 
 /**
+ * Removes a vault from the saved list. If it was the active vault, activates
+ * the next remaining vault (or clears the active vault if none remain).
+ */
+export function removeVault(vaultPath: string): VaultState {
+  const vaults = (store.get('vaults') as string[]).filter((v) => v !== vaultPath)
+  store.set('vaults', vaults)
+
+  if (store.get('activeVaultPath') === vaultPath) {
+    store.set('activeVaultPath', vaults[0] ?? null)
+  }
+
+  return getActiveVault()
+}
+
+/**
  * Lists all .md and .txt notes in the specified vault folder with their metadata.
  */
 export async function listVaultNotes(vaultPath: string): Promise<NoteMetadata[]> {

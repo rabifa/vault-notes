@@ -45,11 +45,23 @@ export const useVault = () => {
     }
   }, [])
 
+  const removeVault = useCallback(async (path: string) => {
+    try {
+      const state = await window.api.vault.removeVault(path)
+      setVaultState(state)
+      return state
+    } catch (error) {
+      console.error('Failed to remove vault:', error)
+      return null
+    }
+  }, [])
+
   return {
     vaultState,
     isLoading,
     selectVaultFolder,
     selectActiveVault,
+    removeVault,
     refreshVaultState: fetchVaultState
   }
 }

@@ -10,7 +10,7 @@ import useNotes from './hooks/useNotes'
 const SIDEBAR_AUTO_HIDE_WIDTH = 600
 
 export const App = () => {
-  const { vaultState, selectVaultFolder, selectActiveVault } = useVault()
+  const { vaultState, selectVaultFolder, selectActiveVault, removeVault } = useVault()
 
   const {
     notes,
@@ -83,6 +83,20 @@ export const App = () => {
     }
   }
 
+  const handleRemoveVault = async (vaultPath: string) => {
+    const confirmRemove = window.confirm(
+      vaultState.vaults.length <= 1
+        ? 'Este é o último vault da lista. Removê-lo não apagará os arquivos, mas nenhum vault ficará selecionado. Deseja continuar?'
+        : 'Remover este vault da lista? Os arquivos não serão apagados do disco.'
+    )
+    if (!confirmRemove) return
+
+    const state = await removeVault(vaultPath)
+    if (state && !state.activeVaultPath) {
+      window.alert('Nenhum vault restante. Adicione um vault para continuar.')
+    }
+  }
+
   const handleDuplicateNote = async () => {
     if (activeNote && activeNotePath) {
       const copyTitle = `${activeNote.title} Copia`
@@ -129,6 +143,7 @@ export const App = () => {
             onToggleFavorite={toggleFavorite}
             onSelectVault={selectActiveVault}
             onAddVault={selectVaultFolder}
+            onRemoveVault={handleRemoveVault}
             onRenameNote={renameNote}
             onDeleteNote={handleDeleteNoteByPath}
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}

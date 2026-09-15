@@ -18,6 +18,7 @@ export interface VaultAPI {
   selectFolder: () => Promise<VaultState | null>
   getActiveVault: () => Promise<VaultState>
   setActiveVault: (vaultPath: string) => Promise<VaultState>
+  removeVault: (vaultPath: string) => Promise<VaultState>
   listNotes: (vaultPath: string) => Promise<NoteMetadata[]>
   readNote: (notePath: string) => Promise<string>
   saveNote: (notePath: string, content: string) => Promise<{ updatedAt: number }>

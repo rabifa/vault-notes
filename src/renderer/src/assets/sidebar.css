@@ -385,16 +385,12 @@
 
 .vault-item {
   width: 100%;
-  padding: 6px 8px;
-  background: transparent;
-  border: none;
+  padding: 2px;
   border-radius: 4px;
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  text-align: left;
+  gap: 4px;
   transition: all 0.2s ease;
 }
 
@@ -409,8 +405,43 @@
   border: 1px solid rgba(0, 229, 255, 0.2);
 }
 
-.vault-item-icon {
+.vault-item-open-btn,
+.vault-item-remove-btn {
   flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.vault-item-open-btn:hover {
+  opacity: 1;
+  color: var(--cyan-neon);
+  background-color: var(--bg-control);
+}
+
+.vault-item-remove-btn:hover {
+  opacity: 1;
+  color: var(--pink-neon);
+  background-color: var(--bg-control);
+}
+
+.vault-item-select-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 4px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
 .vault-item-name {
@@ -419,6 +450,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 .vault-dropdown-divider {
@@ -450,39 +482,6 @@
   border-color: var(--pink-neon);
   color: var(--pink-neon);
   box-shadow: 0 0 8px rgba(255, 0, 127, 0.3);
-}
-
-.vault-context-menu {
-  position: fixed;
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-.vault-context-menu-item {
-  width: 100%;
-  padding: 6px 10px;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.vault-context-menu-item:hover {
-  background-color: var(--bg-control);
-  color: var(--cyan-neon);
 }
 
 /* Custom scrollbar */

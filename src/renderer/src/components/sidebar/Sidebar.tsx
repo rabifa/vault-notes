@@ -24,6 +24,7 @@ interface SidebarProps {
   onToggleFavorite: (notePath: string) => void
   onSelectVault: (path: string) => void
   onAddVault: () => void
+  onRemoveVault: (path: string) => void
   onRenameNote: (notePath: string, newTitle: string) => void
   onDeleteNote: (notePath: string) => void
   onToggleSidebar?: () => void
@@ -40,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleFavorite,
   onSelectVault,
   onAddVault,
+  onRemoveVault,
   onRenameNote,
   onDeleteNote,
   onToggleSidebar
@@ -130,6 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             vaultState={vaultState}
             onSelectVault={onSelectVault}
             onAddVault={onAddVault}
+            onRemoveVault={onRemoveVault}
           />
         </div>
       </div>

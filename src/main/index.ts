@@ -6,6 +6,7 @@ import {
   selectVaultFolder,
   getActiveVault,
   setActiveVault,
+  removeVault,
   listVaultNotes,
   readNote,
   saveNote,
@@ -31,6 +32,10 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('vault:set-active-vault', async (_, vaultPath: string) => {
     return setActiveVault(vaultPath)
+  })
+
+  ipcMain.handle('vault:remove', async (_, vaultPath: string) => {
+    return removeVault(vaultPath)
   })
 
   ipcMain.handle('vault:list-notes', async (_, vaultPath: string) => {

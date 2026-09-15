@@ -7,6 +7,7 @@ const api = {
     selectFolder: () => ipcRenderer.invoke('vault:select-folder'),
     getActiveVault: () => ipcRenderer.invoke('vault:get-active-vault'),
     setActiveVault: (vaultPath: string) => ipcRenderer.invoke('vault:set-active-vault', vaultPath),
+    removeVault: (vaultPath: string) => ipcRenderer.invoke('vault:remove', vaultPath),
     listNotes: (vaultPath: string) => ipcRenderer.invoke('vault:list-notes', vaultPath),
     readNote: (notePath: string) => ipcRenderer.invoke('vault:read-note', notePath),
     saveNote: (notePath: string, content: string) =>
