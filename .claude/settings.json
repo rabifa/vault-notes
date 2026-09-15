@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run *)",
-      "Bash(grep -o 'maskImage:\\\\`url\\([^\\)]\\\\{0,20\\\\}' out/renderer/assets/index-D3Xrakn3.js)",
-      "Bash(grep -o 'maskImage[^,]\\\\{0,40\\\\}' out/renderer/assets/index-D3Xrakn3.js)"
+      "Bash(npm run *)"
     ]
   }
 }
