@@ -1,6 +1,6 @@
 {
   "name": "vault-notes",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A fast, keyboard-friendly note-taking desktop app with a dark, neon-accented look.",
   "main": "./out/main/index.js",
   "author": "Raphael Faria",
