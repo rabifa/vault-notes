@@ -163,8 +163,8 @@ export async function listVaultNotes(vaultPath: string): Promise<NoteMetadata[]>
       })
 
     const notes = await Promise.all(notePromises)
-    // Sort by modification date descending (most recently updated first)
-    return notes.sort((a, b) => b.updatedAt - a.updatedAt)
+    // Sort by creation date descending (most recently created first)
+    return notes.sort((a, b) => b.createdAt - a.createdAt)
   } catch (error) {
     console.error('Error listing notes in vault:', error)
     return []
