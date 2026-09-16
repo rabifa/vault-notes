@@ -158,7 +158,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       <p className="note-card-preview">{note.preview || 'Nenhum conteúdo...'}</p>
 
       <div className="note-card-footer">
-        <span className="note-card-date">{formatTime(note.updatedAt)}</span>
+        <span className="note-card-date">{formatTime(note.createdAt)}</span>
         <div className="note-card-actions">
           <div className="note-download-popover-wrap" ref={downloadPopoverRef}>
             <button
