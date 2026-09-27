@@ -1,3 +1,5 @@
+import { detectVideoProvider } from '../components/editor/VideoEmbed'
+
 // Strips common Markdown syntax (headings, lists, checkboxes, emphasis,
 // links, code, blockquotes, rules) plus any embedded HTML tags down to
 // plain text, for use in note-list previews. Run before collapsing
@@ -170,12 +172,16 @@ export function parseInline(text: string, noteDir = ''): string {
 
   // Images ![alt](src) - matched before links below, since a link's own
   // "[text](url)" pattern would otherwise also match inside it, leaving a
-  // stray "!" in front of a wrongly-created <a> tag.
-  html = html.replace(
-    /!\[([^\]]*)\]\(([^)\s]+)\)/g,
-    (_, alt, src) =>
-      `<img src="${escapeHtml(resolveImageDisplayUrl(src, noteDir))}" alt="${escapeHtml(alt)}">`
-  )
+  // stray "!" in front of a wrongly-created <a> tag. A YouTube/Vimeo/direct
+  // video-file link written the same way is a video embed instead of a
+  // (broken) image - see VideoEmbed.ts, which also owns rendering it live.
+  html = html.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt, src) => {
+    const provider = detectVideoProvider(src)
+    if (provider) {
+      return `<div data-video-embed data-src="${escapeHtml(src)}" data-alt="${escapeHtml(alt)}" data-provider="${provider}"></div>`
+    }
+    return `<img src="${escapeHtml(resolveImageDisplayUrl(src, noteDir))}" alt="${escapeHtml(alt)}">`
+  })
 
   // Links [text](url)
   html = html.replace(
@@ -394,6 +400,17 @@ function nodeToMarkdown(node: Node, noteDir: string): string {
   const el = node as HTMLElement
   const tagName = el.tagName.toLowerCase()
   const children = (target: HTMLElement = el): string => childrenToMarkdown(target, noteDir)
+
+  // VideoEmbed's own wrapper (see VideoEmbed.ts's renderHTML) - written
+  // back out as the same "![alt](url)" shorthand it was recognized from in
+  // parseInline, never as this <div>'s actual iframe/video HTML. Checked
+  // ahead of the switch below since a plain <div> otherwise falls through
+  // to its default case unchanged.
+  if (tagName === 'div' && el.hasAttribute('data-video-embed')) {
+    const alt = el.getAttribute('data-alt') || ''
+    const src = el.getAttribute('data-src') || ''
+    return `![${alt}](${src})`
+  }
 
   switch (tagName) {
     case 'h1':

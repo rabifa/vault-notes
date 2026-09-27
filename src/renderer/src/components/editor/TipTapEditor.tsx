@@ -18,6 +18,7 @@ import EditorToolbar from './EditorToolbar'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import { TableViewWithEditButton } from './TableViewWithEditButton'
 import { ResizableImage } from './ResizableImage'
+import { VideoEmbed } from './VideoEmbed'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import { ImageMarkdownInputRule } from './ImageMarkdownInputRule'
@@ -165,6 +166,7 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       ResizableImage.configure({
         inline: true
       }),
+      VideoEmbed,
       CodeBlockWithCopy,
       Table.configure({
         resizable: true,
