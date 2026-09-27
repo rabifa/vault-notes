@@ -11,6 +11,7 @@ import Link from '@tiptap/extension-link'
 
 import EditorToolbar from './EditorToolbar'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
+import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
 import { markdownToHtml, htmlToMarkdown, textToHtml } from '../../utils/markdown'
 
@@ -100,7 +101,8 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
           rel: 'noopener noreferrer',
           target: '_blank'
         }
-      })
+      }),
+      LinkMarkdownInputRule
     ],
     content: noteExtension === '.txt' ? textToHtml(noteContent) : markdownToHtml(noteContent),
     onUpdate: ({ editor }) => {
