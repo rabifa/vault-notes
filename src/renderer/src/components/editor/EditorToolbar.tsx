@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@tiptap/react'
-import { Copy, Minus, Plus, MoreHorizontal, Link2, Table } from 'lucide-react'
+import { Copy, Minus, Plus, MoreHorizontal, Link2, Table, PaintBucket, Ban } from 'lucide-react'
 
 import sidebarEnableIcon from '../../assets/icons/sidebar-anable-icon.svg'
 import sidebarDisableIcon from '../../assets/icons/sidebar-disable-icon.svg'
@@ -70,6 +70,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 }) => {
   const [isFontOpen, setIsFontOpen] = useState(false)
   const [isColorOpen, setIsColorOpen] = useState(false)
+  const [isHighlightOpen, setIsHighlightOpen] = useState(false)
   const [isOverflowOpen, setIsOverflowOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isLinkOpen, setIsLinkOpen] = useState(false)
@@ -81,6 +82,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [collapsed, setCollapsed] = useState({ group3: false, group4: false })
   const fontRef = useRef<HTMLDivElement>(null)
   const colorRef = useRef<HTMLDivElement>(null)
+  const highlightRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
   const deleteRef = useRef<HTMLDivElement>(null)
   const linkRef = useRef<HTMLDivElement>(null)
@@ -105,6 +107,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       }
       if (colorRef.current && !colorRef.current.contains(e.target as Node)) {
         setIsColorOpen(false)
+      }
+      if (highlightRef.current && !highlightRef.current.contains(e.target as Node)) {
+        setIsHighlightOpen(false)
       }
       if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
         setIsOverflowOpen(false)
@@ -254,6 +259,25 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     const { to } = editor.state.selection
     editor.chain().focus().setColor(colorValue).setTextSelection(to).run()
     setIsColorOpen(false)
+  }
+
+  const getActiveHighlight = () => {
+    const attrs = editor.getAttributes('highlight')
+    return attrs.color ? toHexColor(attrs.color) : null
+  }
+
+  // Same rationale as setColor above: re-collapse the selection to its end
+  // after applying so the cursor doesn't stay parked mid-highlight.
+  const setHighlight = (colorValue: string) => {
+    const { to } = editor.state.selection
+    editor.chain().focus().setHighlight({ color: colorValue }).setTextSelection(to).run()
+    setIsHighlightOpen(false)
+  }
+
+  const removeHighlight = () => {
+    const { to } = editor.state.selection
+    editor.chain().focus().unsetHighlight().setTextSelection(to).run()
+    setIsHighlightOpen(false)
   }
 
   // Bare "example.com" is a common thing to paste/type here, but isn't a
@@ -521,6 +545,45 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                       style={{ backgroundColor: color.value }}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setColor(color.value)}
+                      title={color.name}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Highlight (background color) Dropdown */}
+        <div className="dropdown-container" ref={highlightRef}>
+          <button
+            className={`toolbar-btn ${isHighlightOpen ? 'active' : ''}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setIsHighlightOpen(!isHighlightOpen)}
+            title="Cor de Fundo"
+          >
+            <PaintBucket size={15} style={{ color: getActiveHighlight() || undefined }} />
+          </button>
+          {isHighlightOpen && (
+            <div className="dropdown-menu color-dropdown">
+              <div className="color-palette">
+                <button
+                  className={`color-swatch color-swatch-none ${!getActiveHighlight() ? 'active' : ''}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={removeHighlight}
+                  title="Sem Destaque"
+                >
+                  <Ban size={14} />
+                </button>
+                {NEON_COLORS.map((color) => {
+                  const isActive = editor.isActive('highlight', { color: color.value })
+                  return (
+                    <button
+                      key={color.name}
+                      className={`color-swatch ${isActive ? 'active' : ''}`}
+                      style={{ backgroundColor: color.value }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setHighlight(color.value)}
                       title={color.name}
                     />
                   )

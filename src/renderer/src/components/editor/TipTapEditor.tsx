@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { TextStyle, FontSize } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
 import FontFamily from '@tiptap/extension-font-family'
 import TextAlign from '@tiptap/extension-text-align'
 import TaskList from '@tiptap/extension-task-list'
@@ -77,6 +78,9 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }),
       TextStyle,
       Color,
+      Highlight.configure({
+        multicolor: true
+      }),
       FontFamily,
       FontSize,
       TextAlign.configure({

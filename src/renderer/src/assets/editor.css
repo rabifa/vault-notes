@@ -421,6 +421,14 @@
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
 }
 
+.color-swatch-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-control);
+  color: var(--text-secondary, #999);
+}
+
 /* Editor Content Area */
 .editor-workspace {
   flex: 1;
@@ -496,6 +504,17 @@
 .ProseMirror h2 { font-size: 18px; }
 .ProseMirror h3 { font-size: 16px; }
 .ProseMirror h4 { font-size: 14px; }
+
+/* The global `*` reset in base.css sets font-weight: normal directly on
+   every element, including these. Because that's an explicit declaration
+   (not just default non-inheritance), it overrides the font-weight a
+   wrapping <strong> or heading would otherwise pass down - e.g. bolding
+   already-highlighted text silently lost its bold. Inheriting instead
+   lets the surrounding mark (bold, heading, ...) win as expected. */
+.ProseMirror mark,
+.ProseMirror span {
+  font-weight: inherit;
+}
 
 /* Lists & Indentation */
 .ProseMirror ul, .ProseMirror ol {
