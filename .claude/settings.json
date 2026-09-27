@@ -1,7 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npm run *)"
-    ]
+   "permissions": {
+    "allow": ["Bash(npm run *)"]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }
