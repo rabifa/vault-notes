@@ -170,6 +170,16 @@
   background-color: rgba(0, 229, 255, 0.05);
 }
 
+.toolbar-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.toolbar-btn:disabled:hover {
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
 .toolbar-divider {
   width: 1px;
   height: 18px;
@@ -335,6 +345,10 @@
 
 .delete-dropdown {
   min-width: 150px;
+}
+
+.table-edit-dropdown {
+  min-width: 210px;
 }
 
 /* Color Dropdown & Palette */
@@ -660,6 +674,82 @@
   background-color: rgba(255, 0, 127, 0.02);
   padding-top: 4px;
   padding-bottom: 4px;
+}
+
+/* Tables - Table.configure({ resizable: true }) wraps the <table> in a
+   .tableWrapper div and adds .column-resize-handle drag handles; .selectedCell
+   is applied by the extension's own cell-selection plugin. */
+.ProseMirror .tableWrapper {
+  margin: 18px 0;
+  overflow-x: auto;
+  /* The column-resize handle on the last column sits 2px past the table's
+     right edge (see .column-resize-handle below). Without this padding,
+     that couple of pixels is just enough to trip overflow-x: auto into
+     showing a scrollbar, which shifts the layout under the cursor and
+     immediately un-trips it again - a hover/scrollbar flicker loop. */
+  padding-right: 4px;
+  /* prosemirror-tables renders one resize-handle widget per row of the
+     hovered column boundary, each extending 2px past its own cell's
+     bottom edge (see .column-resize-handle) - on the table's last row
+     that's 2px past the table's own bottom edge too. With no overflow-y
+     set here, that sliver counts toward this note's outer scroll
+     container's scrollHeight, which is enough to flicker its vertical
+     scrollbar in and out the same way. Clipped locally instead, since
+     nothing here is meant to overflow vertically. */
+  overflow-y: hidden;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror td > p,
+.ProseMirror th > p {
+  margin-bottom: 0;
+}
+
+.ProseMirror th {
+  background-color: var(--bg-control);
+  color: var(--cyan-neon);
+  font-weight: 600;
+  text-align: left;
+}
+
+.ProseMirror tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.ProseMirror .selectedCell:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 229, 255, 0.15);
+  pointer-events: none;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: -2px;
+  right: -2px;
+  width: 4px;
+  background-color: var(--cyan-neon);
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
 }
 
 /* Horizontal Rule */

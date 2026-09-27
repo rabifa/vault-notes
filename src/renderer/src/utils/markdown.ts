@@ -47,6 +47,41 @@ export function textToHtml(text: string): string {
     .join('')
 }
 
+// Splits a single pipe-table row ("| a | b |" or "a | b") into trimmed
+// cell strings, honoring an escaped pipe ("\|") as literal cell content
+// rather than a column separator.
+export function splitTableRow(line: string): string[] {
+  let trimmed = line.trim()
+  if (trimmed.startsWith('|')) trimmed = trimmed.slice(1)
+  if (trimmed.endsWith('|') && !trimmed.endsWith('\\|')) trimmed = trimmed.slice(0, -1)
+
+  const cells: string[] = []
+  let current = ''
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i]
+    if (ch === '\\' && trimmed[i + 1] === '|') {
+      current += '|'
+      i++
+    } else if (ch === '|') {
+      cells.push(current.trim())
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  cells.push(current.trim())
+  return cells
+}
+
+// A GFM table separator row: each cell is dashes, optionally with a
+// leading/trailing colon for alignment (":---", "---:", ":---:").
+export function isTableSeparatorRow(line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed.includes('-')) return false
+  const cells = splitTableRow(trimmed)
+  return cells.length > 0 && cells.every((cell) => /^:?-+:?$/.test(cell))
+}
+
 export function parseInline(text: string): string {
   let html = text
 
@@ -119,7 +154,8 @@ export function markdownToHtml(markdown: string): string {
     blankRun = 0
   }
 
-  for (const line of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex]
     if (inCodeBlock) {
       if (/^```\s*$/.test(line.trim())) {
         pushCodeBlock()
@@ -172,6 +208,36 @@ export function markdownToHtml(markdown: string): string {
     if (quoteMatch) {
       closeList()
       result.push(`<blockquote>${parseInline(quoteMatch[1])}</blockquote>`)
+      continue
+    }
+
+    // Check table: a row containing at least one pipe, immediately
+    // followed by a GFM separator row (e.g. "| --- | --- |").
+    if (
+      trimmed.includes('|') &&
+      lineIndex + 1 < lines.length &&
+      isTableSeparatorRow(lines[lineIndex + 1])
+    ) {
+      closeList()
+      const headerCells = splitTableRow(trimmed)
+      const rowsHtml = [
+        `<tr>${headerCells.map((cell) => `<th>${parseInline(cell)}</th>`).join('')}</tr>`
+      ]
+      let bodyIndex = lineIndex + 2
+      while (
+        bodyIndex < lines.length &&
+        lines[bodyIndex].trim() !== '' &&
+        lines[bodyIndex].includes('|')
+      ) {
+        const rowCells = splitTableRow(lines[bodyIndex])
+        rowsHtml.push(
+          `<tr>${rowCells.map((cell) => `<td>${parseInline(cell)}</td>`).join('')}</tr>`
+        )
+        bodyIndex++
+      }
+      result.push(`<table><tbody>${rowsHtml.join('')}</tbody></table>`)
+      lineIndex = bodyIndex - 1
+      blankRun = 0
       continue
     }
 
@@ -335,6 +401,8 @@ function nodeToMarkdown(node: Node): string {
       return `> ${childrenToMarkdown(el)}\n\n`
     case 'hr':
       return '---\n\n'
+    case 'table':
+      return `${tableToMarkdown(el)}\n\n`
     case 'pre': {
       // TipTap's CodeBlock always nests a <code> child; read straight from
       // it (skipping parseInline/childrenToMarkdown) so markdown syntax
@@ -354,6 +422,37 @@ function nodeToMarkdown(node: Node): string {
       }
       return childrenToMarkdown(el)
   }
+}
+
+// Serializes a <table> (thead/tbody optional - TipTap's Table extension
+// renders header cells as <th> directly inside <tbody>) into a GFM pipe
+// table, treating whichever row comes first as the header row.
+function tableToMarkdown(tableEl: HTMLElement): string {
+  const rows = Array.from(tableEl.querySelectorAll('tr'))
+  if (rows.length === 0) return ''
+
+  const cellText = (cell: Element): string =>
+    childrenToMarkdown(cell as HTMLElement)
+      .replace(/\n+/g, ' ')
+      .trim()
+      .replace(/\|/g, '\\|')
+
+  const rowsCells = rows.map((row) => Array.from(row.children).map((cell) => cellText(cell)))
+  const colCount = Math.max(...rowsCells.map((cells) => cells.length))
+  const pad = (cells: string[]): string[] => {
+    const padded = [...cells]
+    while (padded.length < colCount) padded.push('')
+    return padded
+  }
+
+  const lines = [
+    `| ${pad(rowsCells[0]).join(' | ')} |`,
+    `| ${Array(colCount).fill('---').join(' | ')} |`
+  ]
+  for (let i = 1; i < rowsCells.length; i++) {
+    lines.push(`| ${pad(rowsCells[i]).join(' | ')} |`)
+  }
+  return lines.join('\n')
 }
 
 function childrenToMarkdown(element: HTMLElement): string {
