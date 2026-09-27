@@ -468,6 +468,13 @@
   margin-bottom: 4px;
 }
 
+/* List items wrap their content in a <p>, which would otherwise inherit
+   the standalone paragraph's 20px bottom margin and make every list/task
+   row far taller than a normal line of text. */
+.ProseMirror li p {
+  margin-bottom: 0;
+}
+
 /* TaskLists */
 .ProseMirror ul[data-type="taskList"] {
   list-style: none;
