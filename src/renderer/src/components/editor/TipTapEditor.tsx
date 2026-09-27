@@ -80,6 +80,10 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         openOnClick: false,
         autolink: true,
         linkOnPaste: true,
+        // Off by default in the extension: without it, typing markdown's
+        // own [text](url) syntax leaves it as literal text instead of
+        // converting it into a link as you finish typing it.
+        markdownLinks: true,
         HTMLAttributes: {
           rel: 'noopener noreferrer',
           target: '_blank'
