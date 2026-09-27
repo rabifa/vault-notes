@@ -104,6 +104,22 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }),
       LinkMarkdownInputRule
     ],
+    editorProps: {
+      handleClick: (_view, _pos, event) => {
+        // openOnClick is off so a plain click just places the cursor
+        // (needed to edit a link's own text) - Ctrl/Cmd+click is the
+        // escape hatch to actually follow it, same convention as VS Code
+        // and Notion. window.open goes through the app's existing
+        // setWindowOpenHandler, which hands the URL to the OS browser
+        // instead of a new Electron window.
+        if (!(event.ctrlKey || event.metaKey)) return false
+        const link = (event.target as HTMLElement)?.closest('a[href]')
+        if (!link) return false
+        event.preventDefault()
+        window.open(link.getAttribute('href') || '', '_blank', 'noopener,noreferrer')
+        return true
+      }
+    },
     content: noteExtension === '.txt' ? textToHtml(noteContent) : markdownToHtml(noteContent),
     onUpdate: ({ editor }) => {
       const html = editor.getHTML()
