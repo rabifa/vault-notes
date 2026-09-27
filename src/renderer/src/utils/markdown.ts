@@ -30,6 +30,51 @@ export function toPreviewText(content: string, maxLength = 150): string {
   return plain.slice(0, maxLength)
 }
 
+// A source already carries its own scheme (http(s), data:, vault-file:, ...)
+// rather than being a path relative to the note - leave those alone instead
+// of trying to resolve them against noteDir.
+const ABSOLUTE_SRC_REGEX = /^([a-z][a-z0-9+.-]*:)/i
+
+// Notes live in a flat vault (no subfolders), so noteDir is always the
+// vault root - but paths still arrive OS-specific (backslashes on
+// Windows), so this only ever does plain string surgery, never touches
+// the filesystem or Node's path module (unavailable in the renderer).
+function dirnameOf(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, '/')
+  const idx = normalized.lastIndexOf('/')
+  return idx === -1 ? '' : normalized.slice(0, idx)
+}
+
+// Converts a path relative to the note (e.g. "attachments/x.png", as
+// stored in the saved Markdown) into a "vault-file://" URL the editor can
+// actually load - see the protocol handler registered in the main
+// process, which serves it back from disk regardless of whether the
+// renderer's own origin is http(s) (dev) or file (prod).
+function resolveImageDisplayUrl(src: string, noteDir: string): string {
+  if (!noteDir || ABSOLUTE_SRC_REGEX.test(src)) return src
+  const absolute = `${noteDir}/${src}`
+  const withLeadingSlash = absolute.startsWith('/') ? absolute : `/${absolute}`
+  return `vault-file://${encodeURI(withLeadingSlash)}`
+}
+
+// Public entry point for the same conversion, for a freshly-attached image:
+// once vault:save-image returns the note-relative path it was copied to,
+// this turns it into the URL to hand the editor right away (setImage's
+// src), without waiting for a reload of the note through markdownToHtml.
+export function resolveNoteImageUrl(relativePath: string, notePath: string): string {
+  return resolveImageDisplayUrl(relativePath, dirnameOf(notePath))
+}
+
+// The inverse, applied when saving: turns a "vault-file://" display URL
+// back into the note-relative path that belongs in the Markdown, so the
+// saved file never bakes in an absolute, machine-specific location.
+function toRelativeImageSrc(src: string, noteDir: string): string {
+  if (!src.startsWith('vault-file://')) return src
+  const absolute = decodeURI(src.slice('vault-file://'.length))
+  const prefix = `${noteDir}/`
+  return absolute.startsWith(prefix) ? absolute.slice(prefix.length) : absolute
+}
+
 export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -82,7 +127,7 @@ export function isTableSeparatorRow(line: string): boolean {
   return cells.length > 0 && cells.every((cell) => /^:?-+:?$/.test(cell))
 }
 
-export function parseInline(text: string): string {
+export function parseInline(text: string, noteDir = ''): string {
   let html = text
 
   // Combined bold+italic (*** or ___) must be handled before the plain
@@ -105,6 +150,15 @@ export function parseInline(text: string): string {
   // Inline code (`)
   html = html.replace(/`(.*?)`/g, '<code>$1</code>')
 
+  // Images ![alt](src) - matched before links below, since a link's own
+  // "[text](url)" pattern would otherwise also match inside it, leaving a
+  // stray "!" in front of a wrongly-created <a> tag.
+  html = html.replace(
+    /!\[([^\]]*)\]\(([^)\s]+)\)/g,
+    (_, alt, src) =>
+      `<img src="${escapeHtml(resolveImageDisplayUrl(src, noteDir))}" alt="${escapeHtml(alt)}">`
+  )
+
   // Links [text](url)
   html = html.replace(
     /\[([^\]]+)\]\(([^)\s]+)\)/g,
@@ -114,8 +168,9 @@ export function parseInline(text: string): string {
   return html
 }
 
-export function markdownToHtml(markdown: string): string {
+export function markdownToHtml(markdown: string, notePath = ''): string {
   if (!markdown) return ''
+  const noteDir = dirnameOf(notePath)
   const lines = markdown.split(/\r?\n/)
   const result: string[] = []
   let currentListType: 'ul' | 'ol' | 'task' | null = null
@@ -192,7 +247,7 @@ export function markdownToHtml(markdown: string): string {
     if (headingMatch) {
       closeList()
       const level = headingMatch[1].length
-      result.push(`<h${level}>${parseInline(headingMatch[2])}</h${level}>`)
+      result.push(`<h${level}>${parseInline(headingMatch[2], noteDir)}</h${level}>`)
       continue
     }
 
@@ -207,7 +262,7 @@ export function markdownToHtml(markdown: string): string {
     const quoteMatch = line.match(/^>\s+(.*)$/)
     if (quoteMatch) {
       closeList()
-      result.push(`<blockquote>${parseInline(quoteMatch[1])}</blockquote>`)
+      result.push(`<blockquote>${parseInline(quoteMatch[1], noteDir)}</blockquote>`)
       continue
     }
 
@@ -221,7 +276,7 @@ export function markdownToHtml(markdown: string): string {
       closeList()
       const headerCells = splitTableRow(trimmed)
       const rowsHtml = [
-        `<tr>${headerCells.map((cell) => `<th>${parseInline(cell)}</th>`).join('')}</tr>`
+        `<tr>${headerCells.map((cell) => `<th>${parseInline(cell, noteDir)}</th>`).join('')}</tr>`
       ]
       let bodyIndex = lineIndex + 2
       while (
@@ -231,7 +286,7 @@ export function markdownToHtml(markdown: string): string {
       ) {
         const rowCells = splitTableRow(lines[bodyIndex])
         rowsHtml.push(
-          `<tr>${rowCells.map((cell) => `<td>${parseInline(cell)}</td>`).join('')}</tr>`
+          `<tr>${rowCells.map((cell) => `<td>${parseInline(cell, noteDir)}</td>`).join('')}</tr>`
         )
         bodyIndex++
       }
@@ -251,7 +306,7 @@ export function markdownToHtml(markdown: string): string {
       }
       const checked = taskMatch[1].toLowerCase() === 'x'
       result.push(
-        `<li data-type="taskItem" data-checked="${checked}">${parseInline(taskMatch[2])}</li>`
+        `<li data-type="taskItem" data-checked="${checked}">${parseInline(taskMatch[2], noteDir)}</li>`
       )
       continue
     }
@@ -264,7 +319,7 @@ export function markdownToHtml(markdown: string): string {
         result.push('<ul>')
         currentListType = 'ul'
       }
-      result.push(`<li>${parseInline(bulletMatch[1])}</li>`)
+      result.push(`<li>${parseInline(bulletMatch[1], noteDir)}</li>`)
       continue
     }
 
@@ -276,7 +331,7 @@ export function markdownToHtml(markdown: string): string {
         result.push('<ol>')
         currentListType = 'ol'
       }
-      result.push(`<li>${parseInline(orderedMatch[2])}</li>`)
+      result.push(`<li>${parseInline(orderedMatch[2], noteDir)}</li>`)
       continue
     }
 
@@ -284,7 +339,7 @@ export function markdownToHtml(markdown: string): string {
     if (currentListType) {
       closeList()
     }
-    result.push(`<p>${parseInline(line)}</p>`)
+    result.push(`<p>${parseInline(line, noteDir)}</p>`)
   }
 
   // An unterminated fence (file ends before a closing ```) still renders
@@ -297,18 +352,19 @@ export function markdownToHtml(markdown: string): string {
   return result.join('\n')
 }
 
-export function htmlToMarkdown(html: string): string {
+export function htmlToMarkdown(html: string, notePath = ''): string {
   if (!html) return ''
+  const noteDir = dirnameOf(notePath)
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
-  const rawMarkdown = childrenToMarkdown(doc.body)
+  const rawMarkdown = childrenToMarkdown(doc.body, noteDir)
 
   // Clean up excessive consecutive newlines (more than 2)
   return rawMarkdown.replace(/\n{3,}/g, '\n\n').trim()
 }
 
 // Converts a single DOM node (text or element) to its markdown representation.
-function nodeToMarkdown(node: Node): string {
+function nodeToMarkdown(node: Node, noteDir: string): string {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.textContent || ''
   }
@@ -319,45 +375,51 @@ function nodeToMarkdown(node: Node): string {
 
   const el = node as HTMLElement
   const tagName = el.tagName.toLowerCase()
+  const children = (target: HTMLElement = el): string => childrenToMarkdown(target, noteDir)
 
   switch (tagName) {
     case 'h1':
-      return `# ${childrenToMarkdown(el)}\n\n`
+      return `# ${children()}\n\n`
     case 'h2':
-      return `## ${childrenToMarkdown(el)}\n\n`
+      return `## ${children()}\n\n`
     case 'h3':
-      return `### ${childrenToMarkdown(el)}\n\n`
+      return `### ${children()}\n\n`
     case 'h4':
-      return `#### ${childrenToMarkdown(el)}\n\n`
+      return `#### ${children()}\n\n`
     case 'h5':
-      return `##### ${childrenToMarkdown(el)}\n\n`
+      return `##### ${children()}\n\n`
     case 'h6':
-      return `###### ${childrenToMarkdown(el)}\n\n`
+      return `###### ${children()}\n\n`
     case 'p': {
       const parentName = el.parentElement?.tagName.toLowerCase()
       if (parentName === 'li') {
-        return childrenToMarkdown(el)
+        return children()
       }
-      return `${childrenToMarkdown(el)}\n\n`
+      return `${children()}\n\n`
     }
     case 'strong':
     case 'b':
-      return `**${childrenToMarkdown(el)}**`
+      return `**${children()}**`
     case 'em':
     case 'i':
-      return `*${childrenToMarkdown(el)}*`
+      return `*${children()}*`
     case 'u':
-      return `<u>${childrenToMarkdown(el)}</u>`
+      return `<u>${children()}</u>`
     case 'code':
       return `\`${el.textContent}\``
     case 'a': {
       const href = el.getAttribute('href') || ''
-      return `[${childrenToMarkdown(el)}](${href})`
+      return `[${children()}](${href})`
+    }
+    case 'img': {
+      const alt = el.getAttribute('alt') || ''
+      const src = toRelativeImageSrc(el.getAttribute('src') || '', noteDir)
+      return `![${alt}](${src})`
     }
     case 'br':
       return '\n'
     case 'ul': {
-      let markdown = childrenToMarkdown(el)
+      let markdown = children()
       if (el.parentElement?.tagName.toLowerCase() !== 'li') {
         markdown += '\n'
       }
@@ -371,7 +433,7 @@ function nodeToMarkdown(node: Node): string {
           ;(li as ChildNode & { _olIndex?: number })._olIndex = counter++
         }
       }
-      let markdown = childrenToMarkdown(el)
+      let markdown = children()
       if (el.parentElement?.tagName.toLowerCase() !== 'li') {
         markdown += '\n'
       }
@@ -382,27 +444,27 @@ function nodeToMarkdown(node: Node): string {
         el.getAttribute('data-type') === 'taskItem' || el.hasAttribute('data-checked')
       if (isTaskItem) {
         const checked = el.getAttribute('data-checked') === 'true'
-        return `- [${checked ? 'x' : ' '}] ${childrenToMarkdown(el)}\n`
+        return `- [${checked ? 'x' : ' '}] ${children()}\n`
       }
       const olIndex = (el as HTMLElement & { _olIndex?: number })._olIndex
       if (olIndex !== undefined) {
-        return `${olIndex}. ${childrenToMarkdown(el)}\n`
+        return `${olIndex}. ${children()}\n`
       }
-      return `- ${childrenToMarkdown(el)}\n`
+      return `- ${children()}\n`
     }
     case 'span': {
       const style = el.getAttribute('style')
       if (style) {
-        return `<span style="${style}">${childrenToMarkdown(el)}</span>`
+        return `<span style="${style}">${children()}</span>`
       }
-      return childrenToMarkdown(el)
+      return children()
     }
     case 'blockquote':
-      return `> ${childrenToMarkdown(el)}\n\n`
+      return `> ${children()}\n\n`
     case 'hr':
       return '---\n\n'
     case 'table':
-      return `${tableToMarkdown(el)}\n\n`
+      return `${tableToMarkdown(el, noteDir)}\n\n`
     case 'pre': {
       // TipTap's CodeBlock always nests a <code> child; read straight from
       // it (skipping parseInline/childrenToMarkdown) so markdown syntax
@@ -413,26 +475,26 @@ function nodeToMarkdown(node: Node): string {
     }
     default:
       if (el.getAttribute('style') || el.getAttribute('class')) {
-        const serializedChildren = childrenToMarkdown(el)
+        const serializedChildren = children()
         const tagMatch = el.outerHTML.match(/^<[a-zA-Z0-9]+[^>]*>/)
         if (tagMatch) {
           return `${tagMatch[0]}${serializedChildren}</${tagName}>`
         }
-        return childrenToMarkdown(el)
+        return children()
       }
-      return childrenToMarkdown(el)
+      return children()
   }
 }
 
 // Serializes a <table> (thead/tbody optional - TipTap's Table extension
 // renders header cells as <th> directly inside <tbody>) into a GFM pipe
 // table, treating whichever row comes first as the header row.
-function tableToMarkdown(tableEl: HTMLElement): string {
+function tableToMarkdown(tableEl: HTMLElement, noteDir: string): string {
   const rows = Array.from(tableEl.querySelectorAll('tr'))
   if (rows.length === 0) return ''
 
   const cellText = (cell: Element): string =>
-    childrenToMarkdown(cell as HTMLElement)
+    childrenToMarkdown(cell as HTMLElement, noteDir)
       .replace(/\n+/g, ' ')
       .trim()
       .replace(/\|/g, '\\|')
@@ -455,10 +517,10 @@ function tableToMarkdown(tableEl: HTMLElement): string {
   return lines.join('\n')
 }
 
-function childrenToMarkdown(element: HTMLElement): string {
+function childrenToMarkdown(element: HTMLElement, noteDir: string): string {
   let markdown = ''
   for (let i = 0; i < element.childNodes.length; i++) {
-    markdown += nodeToMarkdown(element.childNodes[i])
+    markdown += nodeToMarkdown(element.childNodes[i], noteDir)
   }
   return markdown
 }

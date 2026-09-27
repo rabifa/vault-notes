@@ -25,6 +25,9 @@ const api = {
     toggleFavorite: (notePath: string) => ipcRenderer.invoke('vault:toggle-favorite', notePath),
     watchChanges: (vaultPath: string) => ipcRenderer.invoke('vault:watch-changes', vaultPath),
     openFolder: (vaultPath: string) => ipcRenderer.invoke('vault:open-folder', vaultPath),
+    selectImage: () => ipcRenderer.invoke('vault:select-image'),
+    saveImageAttachment: (notePath: string, sourceFilePath: string) =>
+      ipcRenderer.invoke('vault:save-image', notePath, sourceFilePath),
     onFileChanged: (callback: (event: string, path: string) => void) => {
       const listener = (_event: unknown, data: { event: string; path: string }) =>
         callback(data.event, data.path)

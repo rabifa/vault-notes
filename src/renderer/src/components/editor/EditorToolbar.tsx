@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@tiptap/react'
-import { Copy, Minus, Plus, MoreHorizontal, Link2, Table, PaintBucket, Ban } from 'lucide-react'
+import {
+  Copy,
+  Minus,
+  Plus,
+  MoreHorizontal,
+  Link2,
+  Table,
+  PaintBucket,
+  Ban,
+  Image as ImageIcon
+} from 'lucide-react'
 
 import sidebarEnableIcon from '../../assets/icons/sidebar-anable-icon.svg'
 import sidebarDisableIcon from '../../assets/icons/sidebar-disable-icon.svg'
@@ -16,9 +26,11 @@ import alignLeftIcon from '../../assets/icons/align-left-icon.svg'
 import alignCenterIcon from '../../assets/icons/align-center-icon.svg'
 import alignRightIcon from '../../assets/icons/align-right-icon.svg'
 import SvgIcon from '../common/SvgIcon'
+import { resolveNoteImageUrl } from '../../utils/markdown'
 
 interface EditorToolbarProps {
   editor: Editor | null
+  notePath?: string | null
   onToggleSidebar?: () => void
   onDeleteNote?: (permanent: boolean) => void
   onDuplicateNote?: () => void
@@ -62,6 +74,7 @@ const NEON_COLORS = [
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editor,
+  notePath,
   onToggleSidebar,
   onDeleteNote,
   onDuplicateNote,
@@ -312,6 +325,25 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const removeLink = () => {
     editor.chain().focus().extendMarkRange('link').unsetLink().run()
     setIsLinkOpen(false)
+  }
+
+  // Copies the picked file into the vault's attachments folder (see
+  // vault:save-image in the main process) and inserts it at the cursor -
+  // the note only ever stores the relative path that comes back, never
+  // this machine's absolute one.
+  const insertImage = async () => {
+    if (!notePath) return
+    const sourceFilePath = await window.api.vault.selectImage()
+    if (!sourceFilePath) return
+
+    const relativePath = await window.api.vault.saveImageAttachment(notePath, sourceFilePath)
+    const src = resolveNoteImageUrl(relativePath, notePath)
+    const alt =
+      sourceFilePath
+        .split(/[/\\]/)
+        .pop()
+        ?.replace(/\.[^./\\]+$/, '') || ''
+    editor.chain().focus().setImage({ src, alt }).run()
   }
 
   const boldButton = (
@@ -602,6 +634,16 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           title="Inserir Tabela"
         >
           <Table size={15} />
+        </button>
+
+        <button
+          className="toolbar-btn"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={insertImage}
+          disabled={!notePath}
+          title="Inserir Imagem"
+        >
+          <ImageIcon size={15} />
         </button>
 
         {/* Link */}

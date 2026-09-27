@@ -674,6 +674,15 @@
   border-color: rgba(255, 0, 127, 0.3);
 }
 
+/* Images - constrained so a large source photo doesn't blow out the
+   note's width; ProseMirror gives the node a selectable outline itself
+   (its ".ProseMirror-selectednode" class) when clicked. */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
 .ProseMirror pre code {
   background-color: transparent;
   border: none;

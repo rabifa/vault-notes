@@ -412,6 +412,58 @@ export async function changeNoteExtension(
 }
 
 /**
+ * Opens a file picker restricted to common image formats, for attaching an
+ * image to a note.
+ */
+export async function selectImageFile(window?: BrowserWindow): Promise<string | null> {
+  const options: Electron.OpenDialogOptions = {
+    title: 'Inserir Imagem',
+    properties: ['openFile'],
+    filters: [{ name: 'Imagens', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] }]
+  }
+
+  const result = window
+    ? await dialog.showOpenDialog(window, options)
+    : await dialog.showOpenDialog(options)
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+
+  return result.filePaths[0]
+}
+
+/**
+ * Copies an image file into the note's vault under an "attachments"
+ * subfolder (vaults are flat, so that's always the note's own directory),
+ * giving it a collision-free name. Returns the path to store in the note's
+ * Markdown, relative to the note itself.
+ */
+export async function saveImageAttachment(
+  notePath: string,
+  sourceFilePath: string
+): Promise<string> {
+  const attachmentsDir = path.join(path.dirname(notePath), 'attachments')
+  await fs.promises.mkdir(attachmentsDir, { recursive: true })
+
+  const ext = path.extname(sourceFilePath)
+  const baseName = path.basename(sourceFilePath, ext) || 'image'
+
+  let fileName = `${baseName}${ext}`
+  let fullPath = path.join(attachmentsDir, fileName)
+  let counter = 1
+
+  while (fs.existsSync(fullPath)) {
+    fileName = `${baseName} ${counter}${ext}`
+    fullPath = path.join(attachmentsDir, fileName)
+    counter++
+  }
+
+  await fs.promises.copyFile(sourceFilePath, fullPath)
+  return `attachments/${fileName}`
+}
+
+/**
  * Toggles a note's favorite status.
  */
 export function toggleFavorite(notePath: string): boolean {

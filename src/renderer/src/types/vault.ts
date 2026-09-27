@@ -36,5 +36,7 @@ export interface VaultAPI {
   toggleFavorite: (notePath: string) => Promise<boolean>
   watchChanges: (vaultPath: string) => Promise<void>
   openFolder: (vaultPath: string) => Promise<string>
+  selectImage: () => Promise<string | null>
+  saveImageAttachment: (notePath: string, sourceFilePath: string) => Promise<string>
   onFileChanged: (callback: (event: string, path: string) => void) => () => void
 }

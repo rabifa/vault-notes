@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, protocol, net } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -17,10 +17,25 @@ import {
   changeNoteExtension,
   toggleFavorite,
   watchVault,
-  unwatchVault
+  unwatchVault,
+  selectImageFile,
+  saveImageAttachment
 } from './vaultManager'
 
 let mainWindow: BrowserWindow | null = null
+
+// Lets note images be referenced as "vault-file://<encoded absolute path>"
+// (see utils/markdown.ts) and load correctly regardless of the renderer's
+// own origin - plain "file://" image src's are blocked when the page
+// itself is served over http (electron-vite's dev server), so a custom
+// scheme is what makes this work the same in dev and in the packaged app.
+// Must run before app is ready.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'vault-file',
+    privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true }
+  }
+])
 
 function registerIpcHandlers(): void {
   ipcMain.handle('vault:select-folder', async () => {
@@ -87,6 +102,14 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('vault:open-folder', async (_, vaultPath: string) => {
     return shell.openPath(vaultPath)
+  })
+
+  ipcMain.handle('vault:select-image', async () => {
+    return selectImageFile(mainWindow || undefined)
+  })
+
+  ipcMain.handle('vault:save-image', async (_, notePath: string, sourceFilePath: string) => {
+    return saveImageAttachment(notePath, sourceFilePath)
   })
 
   ipcMain.handle('window:is-maximized', () => {
@@ -167,6 +190,13 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  // Serves a "vault-file://<encoded absolute path>" URL by swapping it back
+  // to the equivalent "file://" URL it was built from (see
+  // registerSchemesAsPrivileged above and utils/markdown.ts).
+  protocol.handle('vault-file', (request) => {
+    return net.fetch(`file://${request.url.slice('vault-file://'.length)}`)
   })
 
   registerIpcHandlers()

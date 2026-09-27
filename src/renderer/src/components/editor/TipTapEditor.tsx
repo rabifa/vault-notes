@@ -9,6 +9,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
 import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
@@ -90,6 +91,11 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       TaskItem.configure({
         nested: true
       }),
+      // inline so an image can sit mid-paragraph, matching how
+      // markdownToHtml embeds "![]()" wherever it appears in a line of text.
+      Image.configure({
+        inline: true
+      }),
       CodeBlockWithCopy,
       Table.configure({
         resizable: true,
@@ -138,7 +144,10 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         return true
       }
     },
-    content: noteExtension === '.txt' ? textToHtml(noteContent) : markdownToHtml(noteContent),
+    content:
+      noteExtension === '.txt'
+        ? textToHtml(noteContent)
+        : markdownToHtml(noteContent, notePath ?? ''),
     onUpdate: ({ editor }) => {
       const html = editor.getHTML()
       const text = editor.getText()
@@ -152,7 +161,8 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }
 
       // Convert back to save format
-      const convertedContent = noteExtension === '.txt' ? text : htmlToMarkdown(html)
+      const convertedContent =
+        noteExtension === '.txt' ? text : htmlToMarkdown(html, notePath ?? '')
       lastEmittedContentRef.current = convertedContent
 
       onContentChange(convertedContent)
@@ -171,7 +181,9 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
     if (!editor || notePath === null) return
 
     const htmlContent =
-      noteExtension === '.txt' ? textToHtml(noteContent) : markdownToHtml(noteContent)
+      noteExtension === '.txt'
+        ? textToHtml(noteContent)
+        : markdownToHtml(noteContent, notePath ?? '')
 
     const isOwnEcho = noteContent === lastEmittedContentRef.current
 
@@ -216,6 +228,7 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
     <div className="editor-panel">
       <EditorToolbar
         editor={editor}
+        notePath={notePath}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={onToggleSidebar}
         onDeleteNote={onDeleteNote}
