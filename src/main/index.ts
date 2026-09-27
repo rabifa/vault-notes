@@ -200,11 +200,17 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Serves a "vault-file://<encoded absolute path>" URL by swapping it back
-  // to the equivalent "file://" URL it was built from (see
-  // registerSchemesAsPrivileged above and utils/markdown.ts).
+  // Serves a "vault-file://local/?p=<encoded absolute path>" URL (see
+  // utils/markdown.ts) by reading the path back out of the query string and
+  // rebuilding the equivalent "file://" URL. The path deliberately never
+  // sits in the URL's own host/path structure - Chromium's generic parser
+  // for a custom scheme mangles a Windows drive letter there ("C:/..."
+  // becomes host "c", colon stripped), since only the built-in "file:"
+  // scheme gets the URL spec's dedicated drive-letter handling.
   protocol.handle('vault-file', (request) => {
-    return net.fetch(`file://${request.url.slice('vault-file://'.length)}`)
+    const absolutePath = new URL(request.url).searchParams.get('p') || ''
+    const withLeadingSlash = absolutePath.startsWith('/') ? absolutePath : `/${absolutePath}`
+    return net.fetch(`file://${encodeURI(withLeadingSlash)}`)
   })
 
   registerIpcHandlers()

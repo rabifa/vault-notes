@@ -50,11 +50,17 @@ function dirnameOf(filePath: string): string {
 // actually load - see the protocol handler registered in the main
 // process, which serves it back from disk regardless of whether the
 // renderer's own origin is http(s) (dev) or file (prod).
+//
+// The absolute path goes entirely inside the query string ("?p=...") as a
+// single encodeURIComponent-escaped token, deliberately never touching the
+// URL's host/path structure: a Windows path put there directly (even as
+// "vault-file:///C:/...") gets its drive letter mangled into a bogus host
+// ("c", colon stripped) by Chromium's generic parser for custom schemes -
+// only "file:" gets the spec's dedicated drive-letter handling.
 function resolveImageDisplayUrl(src: string, noteDir: string): string {
   if (!noteDir || ABSOLUTE_SRC_REGEX.test(src)) return src
   const absolute = `${noteDir}/${src}`
-  const withLeadingSlash = absolute.startsWith('/') ? absolute : `/${absolute}`
-  return `vault-file://${encodeURI(withLeadingSlash)}`
+  return `vault-file://local/?p=${encodeURIComponent(absolute)}`
 }
 
 // Public entry point for the same conversion, for a freshly-attached image:
@@ -70,9 +76,10 @@ export function resolveNoteImageUrl(relativePath: string, notePath: string): str
 // saved file never bakes in an absolute, machine-specific location.
 function toRelativeImageSrc(src: string, noteDir: string): string {
   if (!src.startsWith('vault-file://')) return src
-  const absolute = decodeURI(src.slice('vault-file://'.length))
+  const param = new URL(src).searchParams.get('p')
+  if (!param) return src
   const prefix = `${noteDir}/`
-  return absolute.startsWith(prefix) ? absolute.slice(prefix.length) : absolute
+  return param.startsWith(prefix) ? param.slice(prefix.length) : param
 }
 
 export function escapeHtml(text: string): string {
