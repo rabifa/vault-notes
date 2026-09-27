@@ -23,7 +23,11 @@ Um app de notas para desktop, rápido e com boa experiência de teclado, com vis
 - **Sidebar** — busca de notas, favoritos, renomear direto na lista, excluir para a lixeira e redimensionar a largura da sidebar como preferir.
 - **Estatísticas ao vivo** — contagem de palavras e caracteres atualizada enquanto você digita.
 - **Layout responsivo** — a janela redimensiona até 400px de largura, escondendo a sidebar automaticamente quando não há espaço para ela e o editor juntos.
-- **Tema escuro neon** — identidade visual própria em ciano/magenta em todo o app.
+- **Temas** — escolha entre Vault Notes (padrão, ciano/magenta neon), Tokyo Night, Catppuccin, Nord, Hackerman e Dracula, todos em variantes dark, direto por um popup ao lado do seletor de vault.
+- **Tabelas** — crie e edite tabelas via Markdown, com um botão flutuante de edição posicionado no próprio canto da tabela.
+- **Imagens e vídeos** — anexe imagens no meio da nota, redimensione-as arrastando um handle, e incorpore vídeos do YouTube/Vimeo ou arquivos de vídeo locais.
+- **Links** — crie links, abra com Ctrl/Cmd+click e digite a sintaxe Markdown de link que ela vira link automaticamente.
+- **Blocos de código** — blocos cercados por ``` com botão de copiar.
 
 ## Desenvolvimento
 
