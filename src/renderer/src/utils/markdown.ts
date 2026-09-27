@@ -137,6 +137,17 @@ export function isTableSeparatorRow(line: string): boolean {
 export function parseInline(text: string, noteDir = ''): string {
   let html = text
 
+  // A resized image (ResizableImage's drag handle) is saved as a literal
+  // HTML <img> tag instead of "![]()" - see nodeToMarkdown's 'img' case -
+  // since plain Markdown image syntax has no room for a width. Matched
+  // first and re-emitted whole, so none of the passes below (which assume
+  // plain text, not attribute values) get a chance to mangle its quotes.
+  html = html.replace(
+    /<img src="([^"]*)" alt="([^"]*)" width="(\d+)"\s*\/?>/g,
+    (_, src, alt, width) =>
+      `<img src="${escapeHtml(resolveImageDisplayUrl(src, noteDir))}" alt="${escapeHtml(alt)}" width="${width}">`
+  )
+
   // Combined bold+italic (*** or ___) must be handled before the plain
   // bold/italic patterns below: matching "**" out of "***text***" first
   // left one asterisk dangling, which the italic pass then paired with
@@ -421,7 +432,12 @@ function nodeToMarkdown(node: Node, noteDir: string): string {
     case 'img': {
       const alt = el.getAttribute('alt') || ''
       const src = toRelativeImageSrc(el.getAttribute('src') || '', noteDir)
-      return `![${alt}](${src})`
+      const width = el.getAttribute('width')
+      // Plain Markdown image syntax has no room for a width - once the
+      // user has resized one (ResizableImage's drag handle sets this
+      // attribute), fall back to a literal HTML <img> tag instead, which
+      // parseInline below recognizes on the way back in.
+      return width ? `<img src="${src}" alt="${alt}" width="${width}">` : `![${alt}](${src})`
     }
     case 'br':
       return '\n'

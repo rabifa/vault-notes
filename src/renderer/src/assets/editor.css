@@ -683,6 +683,35 @@
   border-radius: 4px;
 }
 
+/* Resize handle - ResizableImage's own NodeView wrapper, so the handle can
+   float over the image's bottom-right corner without being part of its
+   editable content (same reasoning as .code-block-wrapper above). */
+.resizable-image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.resizable-image-handle {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background-color: var(--pink-neon);
+  border: 1px solid var(--bg-panel);
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.resizable-image-wrapper:hover .resizable-image-handle,
+.resizable-image-wrapper.ProseMirror-selectednode .resizable-image-handle {
+  opacity: 0.9;
+}
+
 .ProseMirror pre code {
   background-color: transparent;
   border: none;

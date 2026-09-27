@@ -9,7 +9,6 @@ import TextAlign from '@tiptap/extension-text-align'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
 import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
@@ -18,6 +17,7 @@ import TableCell from '@tiptap/extension-table-cell'
 import EditorToolbar from './EditorToolbar'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import { TableViewWithEditButton } from './TableViewWithEditButton'
+import { ResizableImage } from './ResizableImage'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import { ImageMarkdownInputRule } from './ImageMarkdownInputRule'
@@ -162,7 +162,7 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }),
       // inline so an image can sit mid-paragraph, matching how
       // markdownToHtml embeds "![]()" wherever it appears in a line of text.
-      Image.configure({
+      ResizableImage.configure({
         inline: true
       }),
       CodeBlockWithCopy,
