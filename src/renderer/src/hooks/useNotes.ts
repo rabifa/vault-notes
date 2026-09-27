@@ -8,6 +8,28 @@ export type NotesSortOption = 'title-asc' | 'title-desc' | 'created-desc' | 'cre
 const SORT_STORAGE_KEY = 'notesSortOption'
 const SORT_OPTIONS: NotesSortOption[] = ['title-asc', 'title-desc', 'created-desc', 'created-asc']
 
+// Same ordering the sidebar displays: sorted by the chosen criteria, then
+// favorites pulled to the top (both sorts are stable, so criteria order
+// survives within each favorite/non-favorite group). Shared so vault
+// switching can pick the note that will actually appear first on screen.
+const sortNotesList = (list: NoteMetadata[], sortOption: NotesSortOption): NoteMetadata[] => {
+  const sorted = [...list].sort((a, b) => {
+    switch (sortOption) {
+      case 'title-asc':
+        return a.title.localeCompare(b.title, 'pt-BR')
+      case 'title-desc':
+        return b.title.localeCompare(a.title, 'pt-BR')
+      case 'created-asc':
+        return a.createdAt - b.createdAt
+      case 'created-desc':
+      default:
+        return b.createdAt - a.createdAt
+    }
+  })
+
+  return sorted.sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
+}
+
 export const useNotes = (activeVaultPath: string | null) => {
   const [notes, setNotes] = useState<NoteMetadata[]>([])
   const [activeNotePath, setActiveNotePath] = useState<string | null>(null)
@@ -25,6 +47,11 @@ export const useNotes = (activeVaultPath: string | null) => {
   const activeNotePathRef = useRef<string | null>(null)
   const activeNoteContentRef = useRef<string>('')
   const isCreatingInitialNoteRef = useRef(false)
+  const sortOptionRef = useRef<NotesSortOption>(sortOption)
+  // Set whenever the active vault changes so the next fetch knows to pick a
+  // note for the newly opened vault instead of leaving the previous vault's
+  // (now invalid) selection in place.
+  const vaultSwitchPendingRef = useRef(true)
 
   // Sync refs to avoid stale closures in debounced functions
   useEffect(() => {
@@ -35,10 +62,24 @@ export const useNotes = (activeVaultPath: string | null) => {
     activeNoteContentRef.current = activeNoteContent
   }, [activeNoteContent])
 
+  useEffect(() => {
+    sortOptionRef.current = sortOption
+  }, [sortOption])
+
+  useEffect(() => {
+    vaultSwitchPendingRef.current = true
+  }, [activeVaultPath])
+
   // Fetch note list from active vault
   const fetchNotes = useCallback(async () => {
     if (!activeVaultPath) {
       setNotes([])
+      if (vaultSwitchPendingRef.current) {
+        vaultSwitchPendingRef.current = false
+        setActiveNotePath(null)
+        setActiveNoteContent('')
+        setSaveStatus('idle')
+      }
       return
     }
     setIsLoadingNotes(true)
@@ -59,6 +100,20 @@ export const useNotes = (activeVaultPath: string | null) => {
       }
 
       setNotes(list)
+
+      // On a vault switch, select the note that will show up first on the
+      // sidebar, skipping any favorited notes pinned to the top so we don't
+      // silently open something the user starred for quick access elsewhere.
+      if (vaultSwitchPendingRef.current) {
+        vaultSwitchPendingRef.current = false
+        if (list.length > 0) {
+          const sorted = sortNotesList(list, sortOptionRef.current)
+          const firstNonFavorite = sorted.find((note) => !note.isFavorite)
+          setActiveNotePath((firstNonFavorite ?? sorted[0]).path)
+        } else {
+          setActiveNotePath(null)
+        }
+      }
     } catch (error) {
       console.error('Failed to list notes:', error)
     } finally {
@@ -349,21 +404,7 @@ export const useNotes = (activeVaultPath: string | null) => {
         )
       : notes
 
-    const sorted = [...matched].sort((a, b) => {
-      switch (sortOption) {
-        case 'title-asc':
-          return a.title.localeCompare(b.title, 'pt-BR')
-        case 'title-desc':
-          return b.title.localeCompare(a.title, 'pt-BR')
-        case 'created-asc':
-          return a.createdAt - b.createdAt
-        case 'created-desc':
-        default:
-          return b.createdAt - a.createdAt
-      }
-    })
-
-    return sorted.sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
+    return sortNotesList(matched, sortOption)
   }, [notes, searchQuery, sortOption])
 
   // Get active note metadata
