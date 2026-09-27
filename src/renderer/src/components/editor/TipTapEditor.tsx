@@ -20,6 +20,7 @@ import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import { TableViewWithEditButton } from './TableViewWithEditButton'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
+import { ImageMarkdownInputRule } from './ImageMarkdownInputRule'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
 import {
   markdownToHtml,
@@ -194,7 +195,24 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
           target: '_blank'
         }
       }),
-      LinkMarkdownInputRule
+      LinkMarkdownInputRule,
+      // Converts a manually-typed "![alt](C:\local\path.png)" into a real,
+      // vault-attached image the same way pasting/dropping one does - see
+      // handlePaste below for the equivalent paste-as-text case.
+      ImageMarkdownInputRule.configure({
+        onLocalImagePath: async (sourceFilePath) => {
+          if (!notePath) return null
+          try {
+            const relativePath = await window.api.vault.saveImageAttachment(
+              notePath,
+              sourceFilePath
+            )
+            return resolveNoteImageUrl(relativePath, notePath)
+          } catch {
+            return null
+          }
+        }
+      })
     ],
     editorProps: {
       handleClick: (_view, _pos, event) => {
