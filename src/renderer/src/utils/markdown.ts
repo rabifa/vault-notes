@@ -11,6 +11,13 @@ export function toPreviewText(content: string, maxLength = 150): string {
     .replace(/^\s*[-*+]\s+/gm, '')
     .replace(/^\s*\d+\.\s+/gm, '')
     .replace(/^\s{0,3}([-*_])\s*(?:\1\s*){2,}$/gm, '')
+    // Table separator rows ("| --- | --- |", "---|---") carry no
+    // content and would otherwise show up as literal dashes/pipes;
+    // drop them outright. Remaining pipes (the header/data row
+    // dividers) just become spaces - good enough for a plain-text
+    // preview without needing a full table parse.
+    .replace(/^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/gm, '')
+    .replace(/\|/g, ' ')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
