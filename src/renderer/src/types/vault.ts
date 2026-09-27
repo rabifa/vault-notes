@@ -38,5 +38,10 @@ export interface VaultAPI {
   openFolder: (vaultPath: string) => Promise<string>
   selectImage: () => Promise<string | null>
   saveImageAttachment: (notePath: string, sourceFilePath: string) => Promise<string>
+  saveImageAttachmentFromBuffer: (
+    notePath: string,
+    data: Uint8Array,
+    extension: string
+  ) => Promise<string>
   onFileChanged: (callback: (event: string, path: string) => void) => () => void
 }

@@ -19,7 +19,8 @@ import {
   watchVault,
   unwatchVault,
   selectImageFile,
-  saveImageAttachment
+  saveImageAttachment,
+  saveImageAttachmentFromBuffer
 } from './vaultManager'
 
 let mainWindow: BrowserWindow | null = null
@@ -111,6 +112,13 @@ function registerIpcHandlers(): void {
   ipcMain.handle('vault:save-image', async (_, notePath: string, sourceFilePath: string) => {
     return saveImageAttachment(notePath, sourceFilePath)
   })
+
+  ipcMain.handle(
+    'vault:save-image-buffer',
+    async (_, notePath: string, data: Uint8Array, extension: string) => {
+      return saveImageAttachmentFromBuffer(notePath, data, extension)
+    }
+  )
 
   ipcMain.handle('window:is-maximized', () => {
     return mainWindow?.isMaximized() || false

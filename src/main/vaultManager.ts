@@ -464,6 +464,37 @@ export async function saveImageAttachment(
 }
 
 /**
+ * Same as saveImageAttachment, but for an image that only exists as raw
+ * bytes in memory - a screenshot pasted from the clipboard has no backing
+ * file on disk (webUtils.getPathForFile returns "" for it), so there is no
+ * source path to copy from.
+ */
+export async function saveImageAttachmentFromBuffer(
+  notePath: string,
+  data: Uint8Array,
+  extension: string
+): Promise<string> {
+  const attachmentsDir = path.join(path.dirname(notePath), 'attachments')
+  await fs.promises.mkdir(attachmentsDir, { recursive: true })
+
+  const ext = extension.startsWith('.') ? extension : `.${extension}`
+  const baseName = 'imagem colada'
+
+  let fileName = `${baseName}${ext}`
+  let fullPath = path.join(attachmentsDir, fileName)
+  let counter = 1
+
+  while (fs.existsSync(fullPath)) {
+    fileName = `${baseName} ${counter}${ext}`
+    fullPath = path.join(attachmentsDir, fileName)
+    counter++
+  }
+
+  await fs.promises.writeFile(fullPath, Buffer.from(data))
+  return `attachments/${fileName}`
+}
+
+/**
  * Toggles a note's favorite status.
  */
 export function toggleFavorite(notePath: string): boolean {

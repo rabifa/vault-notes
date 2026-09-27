@@ -1,8 +1,13 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
+  // A pasted/dropped File object carries no filesystem path in the
+  // renderer's own sandbox - webUtils resolves the absolute path it was
+  // read from, so a pasted/dropped image can go through the same
+  // vault:save-image copy as one picked via the file dialog.
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
   vault: {
     selectFolder: () => ipcRenderer.invoke('vault:select-folder'),
     getActiveVault: () => ipcRenderer.invoke('vault:get-active-vault'),
@@ -28,6 +33,8 @@ const api = {
     selectImage: () => ipcRenderer.invoke('vault:select-image'),
     saveImageAttachment: (notePath: string, sourceFilePath: string) =>
       ipcRenderer.invoke('vault:save-image', notePath, sourceFilePath),
+    saveImageAttachmentFromBuffer: (notePath: string, data: Uint8Array, extension: string) =>
+      ipcRenderer.invoke('vault:save-image-buffer', notePath, data, extension),
     onFileChanged: (callback: (event: string, path: string) => void) => {
       const listener = (_event: unknown, data: { event: string; path: string }) =>
         callback(data.event, data.path)

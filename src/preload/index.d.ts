@@ -5,6 +5,7 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
+      getPathForFile: (file: File) => string
       vault: VaultAPI
     }
     electronAPI: {

@@ -21,7 +21,28 @@ import { TableViewWithEditButton } from './TableViewWithEditButton'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
-import { markdownToHtml, htmlToMarkdown, textToHtml } from '../../utils/markdown'
+import {
+  markdownToHtml,
+  htmlToMarkdown,
+  textToHtml,
+  resolveNoteImageUrl
+} from '../../utils/markdown'
+
+const MIME_TO_EXTENSION: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/bmp': 'bmp',
+  'image/svg+xml': 'svg'
+}
+
+// Clipboard screenshots come through as "image/png" almost universally, so
+// that's the fallback for anything not in the map above rather than an
+// extension-less file.
+function extensionForMimeType(mimeType: string): string {
+  return MIME_TO_EXTENSION[mimeType] ?? 'png'
+}
 
 interface TipTapEditorProps {
   notePath: string | null
@@ -48,6 +69,32 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
   onContentChange,
   onStatsChange
 }) => {
+  // Copies a pasted/dropped image file into the vault's attachments folder
+  // the same way EditorToolbar's "Inserir Imagem" button does, then inserts
+  // it - at a specific document position when dropped, or at the current
+  // cursor when pasted. A screenshot pasted straight from the clipboard has
+  // no backing file on disk (getPathForFile returns "" for it), so that
+  // case is saved from its raw bytes instead of copied from a source path.
+  const insertImageFile = async (file: File, atNotePath: string, pos?: number): Promise<void> => {
+    const sourceFilePath = window.api.getPathForFile(file)
+    const relativePath = sourceFilePath
+      ? await window.api.vault.saveImageAttachment(atNotePath, sourceFilePath)
+      : await window.api.vault.saveImageAttachmentFromBuffer(
+          atNotePath,
+          new Uint8Array(await file.arrayBuffer()),
+          extensionForMimeType(file.type)
+        )
+
+    const src = resolveNoteImageUrl(relativePath, atNotePath)
+    const alt = file.name.replace(/\.[^.]+$/, '')
+    const chain = editor.chain().focus()
+    if (pos !== undefined) {
+      chain.insertContentAt(pos, { type: 'image', attrs: { src, alt } }).run()
+    } else {
+      chain.setImage({ src, alt }).run()
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -141,6 +188,27 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         if (!link) return false
         event.preventDefault()
         window.open(link.getAttribute('href') || '', '_blank', 'noopener,noreferrer')
+        return true
+      },
+      handlePaste: (_view, event) => {
+        if (!notePath) return false
+        const files = Array.from(event.clipboardData?.files ?? []).filter((file) =>
+          file.type.startsWith('image/')
+        )
+        if (files.length === 0) return false
+        event.preventDefault()
+        files.forEach((file) => void insertImageFile(file, notePath))
+        return true
+      },
+      handleDrop: (view, event) => {
+        if (!notePath) return false
+        const files = Array.from(event.dataTransfer?.files ?? []).filter((file) =>
+          file.type.startsWith('image/')
+        )
+        if (files.length === 0) return false
+        event.preventDefault()
+        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos
+        files.forEach((file) => void insertImageFile(file, notePath, pos))
         return true
       }
     },
