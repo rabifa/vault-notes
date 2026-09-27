@@ -49,10 +49,18 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         link: false,
         listKeymap: false,
         // Auto-inserts an empty paragraph after the document's last node
-        // whenever it isn't a paragraph - fires on every keystroke while
-        // a task list is the last thing in the note, fighting TaskItem's
-        // own Enter handling and corrupting new checklist lines.
-        trailingNode: false
+        // whenever it isn't a paragraph. Left enabled so a code block (or
+        // heading, etc.) at the end of a note always has an escape
+        // paragraph after it - otherwise reopening the note leaves no
+        // paragraph past the code block, so the cursor can only land back
+        // inside it and everything typed "below" is stuck as code. Task
+        // lists are excluded via notAfter: with them included, this fires
+        // on every keystroke while a task list is the last thing in the
+        // note, fighting TaskItem's own Enter handling and corrupting new
+        // checklist lines.
+        trailingNode: {
+          notAfter: ['taskList']
+        }
       }),
       TextStyle,
       Color,
