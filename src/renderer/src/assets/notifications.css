@@ -8,7 +8,7 @@
   border-radius: 8px;
   padding: 28px;
   box-sizing: border-box;
-  box-shadow: 0 0 24px rgba(255, 0, 127, 0.1), 0 8px 32px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 24px rgba(var(--pink-neon-rgb), 0.1), 0 8px 32px rgba(0, 0, 0, 0.8);
 }
 
 .confirm-dialog-top-bar {
@@ -83,12 +83,12 @@
   background: var(--bg-control);
   border: 1px solid var(--pink-neon);
   color: var(--pink-neon);
-  box-shadow: 0 0 8px rgba(255, 0, 127, 0.15);
+  box-shadow: 0 0 8px rgba(var(--pink-neon-rgb), 0.15);
 }
 
 .confirm-dialog-btn-confirm:hover {
-  box-shadow: 0 0 16px rgba(255, 0, 127, 0.4);
-  background-color: rgba(255, 0, 127, 0.05);
+  box-shadow: 0 0 16px rgba(var(--pink-neon-rgb), 0.4);
+  background-color: rgba(var(--pink-neon-rgb), 0.05);
 }
 
 /* Toast */

@@ -18,7 +18,9 @@
   --bg-control: #090c20;
   --border-color: #141c3b;
   --pink-neon: #ff007f;
+  --pink-neon-rgb: 255, 0, 127;
   --cyan-neon: #00e5ff;
+  --cyan-neon-rgb: 0, 229, 255;
   --text-muted: #6b7a99;
   --separator: #1e295d;
 

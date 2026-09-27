@@ -3,6 +3,7 @@ import { PanelLeftClose } from 'lucide-react'
 import SearchBar from './SearchBar'
 import NoteCard from './NoteCard'
 import VaultSelector from './VaultSelector'
+import ThemeSwitcher from './ThemeSwitcher'
 import SortButton from './SortButton'
 import { NoteMetadata, VaultState } from '../../types/vault'
 import { NotesSortOption } from '../../hooks/useNotes'
@@ -141,6 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="sidebar-footer">
+          <ThemeSwitcher />
           <VaultSelector
             vaultState={vaultState}
             onSelectVault={onSelectVault}

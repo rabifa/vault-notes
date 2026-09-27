@@ -1,0 +1,71 @@
+/* Theme overrides — all variants are dark. "Vault Notes" (default) lives in base.css. */
+
+:root[data-theme='tokyo-night'] {
+  --bg-app: #1a1b26;
+  --bg-panel: #16161e;
+  --bg-control: #24283b;
+  --border-color: #292e42;
+  --pink-neon: #bb9af7;
+  --pink-neon-rgb: 187, 154, 247;
+  --cyan-neon: #7dcfff;
+  --cyan-neon-rgb: 125, 207, 255;
+  --text-muted: #565f89;
+  --separator: #292e42;
+  --color-text: #c0caf5;
+}
+
+:root[data-theme='catppuccin'] {
+  --bg-app: #1e1e2e;
+  --bg-panel: #181825;
+  --bg-control: #313244;
+  --border-color: #45475a;
+  --pink-neon: #f5c2e7;
+  --pink-neon-rgb: 245, 194, 231;
+  --cyan-neon: #89dceb;
+  --cyan-neon-rgb: 137, 220, 235;
+  --text-muted: #6c7086;
+  --separator: #45475a;
+  --color-text: #cdd6f4;
+}
+
+:root[data-theme='nord'] {
+  --bg-app: #2e3440;
+  --bg-panel: #3b4252;
+  --bg-control: #434c5e;
+  --border-color: #4c566a;
+  --pink-neon: #b48ead;
+  --pink-neon-rgb: 180, 142, 173;
+  --cyan-neon: #88c0d0;
+  --cyan-neon-rgb: 136, 192, 208;
+  --text-muted: #616e88;
+  --separator: #4c566a;
+  --color-text: #eceff4;
+}
+
+:root[data-theme='hackerman'] {
+  --bg-app: #030905;
+  --bg-panel: #061206;
+  --bg-control: #0a1f0a;
+  --border-color: #124912;
+  --pink-neon: #00ff41;
+  --pink-neon-rgb: 0, 255, 65;
+  --cyan-neon: #39ff14;
+  --cyan-neon-rgb: 57, 255, 20;
+  --text-muted: #2f6b2f;
+  --separator: #124912;
+  --color-text: #b6ffb6;
+}
+
+:root[data-theme='dracula'] {
+  --bg-app: #282a36;
+  --bg-panel: #21222c;
+  --bg-control: #343746;
+  --border-color: #44475a;
+  --pink-neon: #ff79c6;
+  --pink-neon-rgb: 255, 121, 198;
+  --cyan-neon: #8be9fd;
+  --cyan-neon-rgb: 139, 233, 253;
+  --text-muted: #6272a4;
+  --separator: #44475a;
+  --color-text: #f8f8f2;
+}

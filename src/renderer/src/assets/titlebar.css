@@ -41,13 +41,14 @@
   letter-spacing: 1px;
 }
 
+/* Brand logo colors are fixed and do not follow the active theme. */
 .titlebar-logo-text .logo-vault {
-  color: var(--cyan-neon);
+  color: #00e5ff;
   text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 }
 
 .titlebar-logo-text .logo-notes {
-  color: var(--pink-neon);
+  color: #ff007f;
   text-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
 }
 
