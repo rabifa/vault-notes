@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@tiptap/react'
-import { Copy, Minus, Plus, MoreHorizontal } from 'lucide-react'
+import { Copy, Minus, Plus, MoreHorizontal, Link2 } from 'lucide-react'
 
 import sidebarEnableIcon from '../../assets/icons/sidebar-anable-icon.svg'
 import sidebarDisableIcon from '../../assets/icons/sidebar-disable-icon.svg'
@@ -72,6 +72,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [isColorOpen, setIsColorOpen] = useState(false)
   const [isOverflowOpen, setIsOverflowOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isLinkOpen, setIsLinkOpen] = useState(false)
+  const [linkUrlDraft, setLinkUrlDraft] = useState('')
   const [fontSizeDraft, setFontSizeDraft] = useState(DEFAULT_FONT_SIZE)
   // Which of the two least-essential groups (text formatting, alignment)
   // have been moved into the overflow "more tools" dropdown because they
@@ -81,6 +83,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const colorRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
   const deleteRef = useRef<HTMLDivElement>(null)
+  const linkRef = useRef<HTMLDivElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const group3Ref = useRef<HTMLDivElement>(null)
   const group4Ref = useRef<HTMLDivElement>(null)
@@ -108,6 +111,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       }
       if (deleteRef.current && !deleteRef.current.contains(e.target as Node)) {
         setIsDeleteOpen(false)
+      }
+      if (linkRef.current && !linkRef.current.contains(e.target as Node)) {
+        setIsLinkOpen(false)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
@@ -198,6 +204,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     }
   }, [isFontOpen, editor])
 
+  // Seed the URL field with whatever link (if any) covers the current
+  // selection, so reopening the popover on an existing link edits it
+  // instead of starting from a blank field.
+  useEffect(() => {
+    if (!isLinkOpen || !editor) return
+    setLinkUrlDraft((editor.getAttributes('link').href as string | undefined) || '')
+  }, [isLinkOpen, editor])
+
   if (!editor) return null
 
   const getActiveColor = () => {
@@ -240,6 +254,40 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     const { to } = editor.state.selection
     editor.chain().focus().setColor(colorValue).setTextSelection(to).run()
     setIsColorOpen(false)
+  }
+
+  // Bare "example.com" is a common thing to paste/type here, but isn't a
+  // valid href on its own - default it to https:// rather than making the
+  // user type the scheme every time.
+  const normalizeUrl = (raw: string): string =>
+    /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`
+
+  const applyLink = () => {
+    const raw = linkUrlDraft.trim()
+    if (!raw) {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      setIsLinkOpen(false)
+      return
+    }
+
+    const href = normalizeUrl(raw)
+    if (editor.state.selection.empty) {
+      // Nothing selected to turn into a link - insert the URL itself as
+      // the link's visible text instead of silently doing nothing.
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: 'text', text: raw, marks: [{ type: 'link', attrs: { href } }] })
+        .run()
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href }).run()
+    }
+    setIsLinkOpen(false)
+  }
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    setIsLinkOpen(false)
   }
 
   const boldButton = (
@@ -477,6 +525,57 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                     />
                   )
                 })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Link */}
+        <div className="dropdown-container" ref={linkRef}>
+          <button
+            className={`toolbar-btn ${editor.isActive('link') ? 'active' : ''}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setIsLinkOpen(!isLinkOpen)}
+            title="Inserir Link"
+          >
+            <Link2 size={15} />
+          </button>
+          {isLinkOpen && (
+            <div className="dropdown-menu link-dropdown">
+              <input
+                type="text"
+                className="link-url-input"
+                placeholder="https://exemplo.com"
+                value={linkUrlDraft}
+                autoFocus
+                onChange={(e) => setLinkUrlDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    applyLink()
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setIsLinkOpen(false)
+                  }
+                }}
+              />
+              <div className="link-dropdown-actions">
+                <button
+                  className="dropdown-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={applyLink}
+                >
+                  {editor.isActive('link') ? 'ATUALIZAR LINK' : 'APLICAR LINK'}
+                </button>
+                {editor.isActive('link') && (
+                  <button
+                    className="dropdown-item danger"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={removeLink}
+                  >
+                    REMOVER LINK
+                  </button>
+                )}
               </div>
             </div>
           )}

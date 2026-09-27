@@ -63,6 +63,12 @@ export function parseInline(text: string): string {
   // Inline code (`)
   html = html.replace(/`(.*?)`/g, '<code>$1</code>')
 
+  // Links [text](url)
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)\s]+)\)/g,
+    (_, label, url) => `<a href="${escapeHtml(url)}">${label}</a>`
+  )
+
   return html
 }
 
@@ -271,6 +277,10 @@ function nodeToMarkdown(node: Node): string {
       return `<u>${childrenToMarkdown(el)}</u>`
     case 'code':
       return `\`${el.textContent}\``
+    case 'a': {
+      const href = el.getAttribute('href') || ''
+      return `[${childrenToMarkdown(el)}](${href})`
+    }
     case 'br':
       return '\n'
     case 'ul': {

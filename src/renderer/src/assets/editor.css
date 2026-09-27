@@ -348,6 +348,39 @@
   box-sizing: border-box;
 }
 
+/* Link Dropdown */
+.link-dropdown {
+  padding: 8px;
+  width: 220px;
+  box-sizing: border-box;
+}
+
+.link-url-input {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  background-color: var(--bg-control);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: #ffffff;
+  font-family: var(--font-family-body);
+  font-size: 11px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.link-url-input:focus {
+  outline: none;
+  border-color: var(--cyan-neon);
+}
+
+.link-dropdown-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+}
+
 .color-palette {
   display: grid;
   grid-template-columns: repeat(4, 22px);
@@ -534,6 +567,18 @@
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
   text-decoration: line-through;
   color: var(--text-muted);
+}
+
+/* Links */
+.ProseMirror a {
+  color: var(--cyan-neon);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: text;
+}
+
+.ProseMirror a:hover {
+  color: var(--pink-neon);
 }
 
 /* Code block & inline code */

@@ -7,6 +7,7 @@ import FontFamily from '@tiptap/extension-font-family'
 import TextAlign from '@tiptap/extension-text-align'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import Link from '@tiptap/extension-link'
 
 import EditorToolbar from './EditorToolbar'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
@@ -44,8 +45,10 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         bulletList: {},
         orderedList: {},
         listItem: {},
-        // Not used by this app, and listKeymap's own Backspace handling
-        // for "taskItem"/"taskList" duplicates TaskItem's own keymap below.
+        // Replaced below by an explicitly configured Link extension
+        // (openOnClick disabled so clicking a link edits it instead of
+        // navigating away). listKeymap's own Backspace handling for
+        // "taskItem"/"taskList" duplicates TaskItem's own keymap below.
         link: false,
         listKeymap: false,
         // Auto-inserts an empty paragraph after the document's last node
@@ -72,6 +75,15 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       TaskList,
       TaskItem.configure({
         nested: true
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          rel: 'noopener noreferrer',
+          target: '_blank'
+        }
       })
     ],
     content: noteExtension === '.txt' ? textToHtml(noteContent) : markdownToHtml(noteContent),
