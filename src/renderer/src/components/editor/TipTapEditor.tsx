@@ -95,6 +95,27 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
     }
   }
 
+  // Some screenshot tools and clipboard managers copy an image as its own
+  // Markdown reference text ("![alt](C:\path\to\file.png)") instead of
+  // actual image data - handlePaste below only spots that case, but the
+  // copy-into-attachments-and-insert step is identical to insertImageFile's,
+  // just starting from a path string instead of a File.
+  const insertImageFromPath = async (
+    sourceFilePath: string,
+    alt: string,
+    atNotePath: string
+  ): Promise<void> => {
+    try {
+      const relativePath = await window.api.vault.saveImageAttachment(atNotePath, sourceFilePath)
+      const src = resolveNoteImageUrl(relativePath, atNotePath)
+      editor.chain().focus().setImage({ src, alt }).run()
+    } catch {
+      // The path in the pasted text didn't resolve to a real file - fall
+      // back to inserting the original text so nothing is silently lost.
+      editor.chain().focus().insertContent(`![${alt}](${sourceFilePath})`).run()
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -195,10 +216,28 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         const files = Array.from(event.clipboardData?.files ?? []).filter((file) =>
           file.type.startsWith('image/')
         )
-        if (files.length === 0) return false
-        event.preventDefault()
-        files.forEach((file) => void insertImageFile(file, notePath))
-        return true
+        if (files.length > 0) {
+          event.preventDefault()
+          files.forEach((file) => void insertImageFile(file, notePath))
+          return true
+        }
+
+        // No actual image data on the clipboard - some tools instead copy
+        // an image as its own Markdown reference text pointing at a local
+        // file ("![alt](C:\path\to\file.png)"); only match that exact
+        // shape (parenthesized path starting with a drive letter or a
+        // leading slash) so a plain link or a remote image URL still
+        // pastes as regular text/a link.
+        const text = event.clipboardData?.getData('text/plain')?.trim()
+        const match = text?.match(/^!\[([^\]]*)\]\(((?:[a-zA-Z]:[\\/]|\/)[^)]+)\)$/)
+        if (match) {
+          event.preventDefault()
+          const [, alt, sourceFilePath] = match
+          void insertImageFromPath(sourceFilePath, alt, notePath)
+          return true
+        }
+
+        return false
       },
       handleDrop: (view, event) => {
         if (!notePath) return false
