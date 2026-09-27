@@ -143,6 +143,7 @@
 }
 
 .note-card {
+  position: relative;
   background-color: var(--bg-control);
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -152,6 +153,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* `:hover`'s transform below creates a new stacking context, which traps
+   any open popover's z-index inside it - the next card in the list (no
+   transform, so it stacks per normal DOM order) would then paint over the
+   popover instead of behind it. Bumping the whole card's z-index while a
+   popover is open keeps it above its siblings regardless of hover state. */
+.note-card.has-open-popover {
+  z-index: 10;
 }
 
 .note-card:hover {

@@ -121,7 +121,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   }
 
   return (
-    <div className={`note-card ${isActive ? 'active' : ''}`} onClick={onClick}>
+    <div
+      className={`note-card ${isActive ? 'active' : ''} ${openPopover ? 'has-open-popover' : ''}`}
+      onClick={onClick}
+    >
       <div className="note-card-header">
         <div className="note-card-title-group">
           <FileText className="note-type-icon" size={14} />
