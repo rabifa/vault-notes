@@ -58,8 +58,8 @@ function registerIpcHandlers(): void {
     }
   )
 
-  ipcMain.handle('vault:delete-note', async (_, notePath: string) => {
-    return deleteNote(notePath)
+  ipcMain.handle('vault:delete-note', async (_, notePath: string, permanent?: boolean) => {
+    return deleteNote(notePath, permanent)
   })
 
   ipcMain.handle('vault:rename-note', async (_, notePath: string, newTitle: string) => {

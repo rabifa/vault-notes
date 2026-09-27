@@ -249,14 +249,15 @@ export const useNotes = (activeVaultPath: string | null) => {
     [activeVaultPath, fetchNotes, selectNote]
   )
 
-  // Delete note
+  // Delete note. By default it moves the file to the system trash;
+  // pass permanent=true to bypass the trash entirely.
   const deleteNote = useCallback(
-    async (notePath: string) => {
+    async (notePath: string, permanent = false) => {
       try {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current)
         }
-        await window.api.vault.deleteNote(notePath)
+        await window.api.vault.deleteNote(notePath, permanent)
 
         if (activeNotePath === notePath) {
           setActiveNotePath(null)

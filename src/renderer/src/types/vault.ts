@@ -23,7 +23,7 @@ export interface VaultAPI {
   readNote: (notePath: string) => Promise<string>
   saveNote: (notePath: string, content: string) => Promise<{ updatedAt: number }>
   createNote: (vaultPath: string, title: string, extension: string) => Promise<NoteMetadata>
-  deleteNote: (notePath: string) => Promise<void>
+  deleteNote: (notePath: string, permanent?: boolean) => Promise<void>
   renameNote: (
     notePath: string,
     newTitle: string

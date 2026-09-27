@@ -1,12 +1,22 @@
 import React from 'react'
 import { ShieldAlert } from 'lucide-react'
 
+export interface ConfirmDialogAction {
+  label: string
+  onClick: () => void
+  variant?: 'default' | 'danger'
+}
+
 export interface ConfirmDialogState {
   title: string
   message: string
-  confirmLabel?: string
   cancelLabel?: string
-  onConfirm: () => void
+  // Single-action dialogs (the common case) keep using confirmLabel/onConfirm.
+  confirmLabel?: string
+  onConfirm?: () => void
+  // Multi-action dialogs (e.g. "move to trash" vs "delete permanently")
+  // render one button per action instead of a single confirm button.
+  actions?: ConfirmDialogAction[]
 }
 
 interface ConfirmDialogProps {
@@ -17,9 +27,13 @@ interface ConfirmDialogProps {
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ state, onCancel }) => {
   if (!state) return null
 
-  const handleConfirm = () => {
-    state.onConfirm()
-  }
+  const actions: ConfirmDialogAction[] = state.actions ?? [
+    {
+      label: state.confirmLabel || 'CONFIRMAR',
+      onClick: state.onConfirm || (() => {}),
+      variant: 'default'
+    }
+  ]
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -37,9 +51,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ state, onCancel })
           <button className="confirm-dialog-btn confirm-dialog-btn-cancel" onClick={onCancel}>
             {state.cancelLabel || 'CANCELAR'}
           </button>
-          <button className="confirm-dialog-btn confirm-dialog-btn-confirm" onClick={handleConfirm}>
-            {state.confirmLabel || 'CONFIRMAR'}
-          </button>
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              className={`confirm-dialog-btn ${
+                action.variant === 'danger'
+                  ? 'confirm-dialog-btn-danger'
+                  : 'confirm-dialog-btn-confirm'
+              }`}
+              onClick={action.onClick}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

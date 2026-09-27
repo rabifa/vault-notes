@@ -247,15 +247,21 @@ export async function createNote(
 }
 
 /**
- * Deletes a note by moving it to the system trash or deleting if trash fails.
+ * Deletes a note. By default it moves the file to the system trash (falling
+ * back to a permanent delete if that fails); pass `permanent: true` to skip
+ * the trash entirely, e.g. when the user explicitly chose to bypass it.
  */
-export async function deleteNote(notePath: string): Promise<void> {
+export async function deleteNote(notePath: string, permanent = false): Promise<void> {
   if (fs.existsSync(notePath)) {
-    try {
-      await shell.trashItem(notePath)
-    } catch (error) {
-      console.warn('Failed to move to trash, deleting permanently:', error)
+    if (permanent) {
       await fs.promises.unlink(notePath)
+    } else {
+      try {
+        await shell.trashItem(notePath)
+      } catch (error) {
+        console.warn('Failed to move to trash, deleting permanently:', error)
+        await fs.promises.unlink(notePath)
+      }
     }
 
     // Clean up favorites

@@ -14,7 +14,8 @@ const api = {
       ipcRenderer.invoke('vault:save-note', notePath, content),
     createNote: (vaultPath: string, title: string, extension: string) =>
       ipcRenderer.invoke('vault:create-note', vaultPath, title, extension),
-    deleteNote: (notePath: string) => ipcRenderer.invoke('vault:delete-note', notePath),
+    deleteNote: (notePath: string, permanent?: boolean) =>
+      ipcRenderer.invoke('vault:delete-note', notePath, permanent),
     renameNote: (notePath: string, newTitle: string) =>
       ipcRenderer.invoke('vault:rename-note', notePath, newTitle),
     exportNote: (notePath: string, content: string, extension: string) =>

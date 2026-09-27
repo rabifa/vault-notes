@@ -91,6 +91,18 @@
   background-color: rgba(255, 0, 127, 0.05);
 }
 
+.confirm-dialog-btn-danger {
+  background: var(--bg-control);
+  border: 1px solid #ff3b3b;
+  color: #ff3b3b;
+  box-shadow: 0 0 8px rgba(255, 59, 59, 0.15);
+}
+
+.confirm-dialog-btn-danger:hover {
+  box-shadow: 0 0 16px rgba(255, 59, 59, 0.4);
+  background-color: rgba(255, 59, 59, 0.05);
+}
+
 /* Toast */
 .toast-container {
   position: fixed;

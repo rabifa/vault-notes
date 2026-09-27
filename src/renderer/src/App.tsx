@@ -89,12 +89,25 @@ export const App = () => {
   const handleDeleteNoteByPath = (notePath: string) => {
     setConfirmDialog({
       title: 'EXCLUIR NOTA',
-      message: 'Tem certeza que deseja mover esta nota para a lixeira?',
-      confirmLabel: 'EXCLUIR',
-      onConfirm: async () => {
-        setConfirmDialog(null)
-        await deleteNote(notePath)
-      }
+      message: 'Como você deseja excluir esta nota?',
+      actions: [
+        {
+          label: 'MOVER PARA LIXEIRA',
+          variant: 'default',
+          onClick: async () => {
+            setConfirmDialog(null)
+            await deleteNote(notePath)
+          }
+        },
+        {
+          label: 'EXCLUIR PERMANENTEMENTE',
+          variant: 'danger',
+          onClick: async () => {
+            setConfirmDialog(null)
+            await deleteNote(notePath, true)
+          }
+        }
+      ]
     })
   }
 
