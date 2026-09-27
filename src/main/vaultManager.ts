@@ -38,20 +38,29 @@ export interface VaultState {
  * collapsing whitespace, since it relies on line boundaries.
  */
 function stripMarkdownSyntax(text: string): string {
-  return text
-    .replace(/```[^\n]*\n?([\s\S]*?)```/g, '$1')
-    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-    .replace(/^\s{0,3}>\s?/gm, '')
-    .replace(/^\s*[-*+]\s+\[[ xX]\]\s+/gm, '')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    .replace(/^\s{0,3}([-*_])\s*(?:\1\s*){2,}$/gm, '')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    .replace(/~~(.*?)~~/g, '$1')
+  return (
+    text
+      .replace(/```[^\n]*\n?([\s\S]*?)```/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^\s{0,3}>\s?/gm, '')
+      .replace(/^\s*[-*+]\s+\[[ xX]\]\s+/gm, '')
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      .replace(/^\s{0,3}([-*_])\s*(?:\1\s*){2,}$/gm, '')
+      // Table separator rows ("| --- | --- |", "---|---") carry no
+      // content and would otherwise show up as literal dashes/pipes;
+      // drop them outright. Remaining pipes (the header/data row
+      // dividers) just become spaces - good enough for a plain-text
+      // preview without needing a full table parse.
+      .replace(/^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/gm, '')
+      .replace(/\|/g, ' ')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      .replace(/(\*|_)(.*?)\1/g, '$2')
+      .replace(/~~(.*?)~~/g, '$1')
+  )
 }
 
 /**
