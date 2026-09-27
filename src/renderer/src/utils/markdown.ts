@@ -4,7 +4,7 @@
 // whitespace, since it relies on line boundaries.
 export function toPreviewText(content: string, maxLength = 150): string {
   const plain = content
-    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/```[^\n]*\n?([\s\S]*?)```/g, '$1')
     .replace(/^\s{0,3}#{1,6}\s+/gm, '')
     .replace(/^\s{0,3}>\s?/gm, '')
     .replace(/^\s*[-*+]\s+\[[ xX]\]\s+/gm, '')
@@ -90,8 +90,42 @@ export function markdownToHtml(markdown: string): string {
   // the user genuinely left an empty line) should turn into one.
   let blankRun = 0
 
+  // Fenced code block state (``` ... ```). Lines inside a fence are kept
+  // completely raw - none of the other markdown rules below (headings,
+  // lists, blank-line collapsing, ...) apply while a fence is open.
+  let inCodeBlock = false
+  let codeLang = ''
+  let codeLines: string[] = []
+
+  const pushCodeBlock = (): void => {
+    const cls = codeLang ? ` class="language-${codeLang}"` : ''
+    result.push(`<pre><code${cls}>${escapeHtml(codeLines.join('\n'))}</code></pre>`)
+    inCodeBlock = false
+    codeLang = ''
+    codeLines = []
+    blankRun = 0
+  }
+
   for (const line of lines) {
+    if (inCodeBlock) {
+      if (/^```\s*$/.test(line.trim())) {
+        pushCodeBlock()
+      } else {
+        codeLines.push(line)
+      }
+      continue
+    }
+
     const trimmed = line.trim()
+
+    const fenceMatch = trimmed.match(/^```(\S*)$/)
+    if (fenceMatch) {
+      closeList()
+      inCodeBlock = true
+      codeLang = fenceMatch[1] || ''
+      codeLines = []
+      continue
+    }
 
     // Empty lines
     if (trimmed === '') {
@@ -172,6 +206,12 @@ export function markdownToHtml(markdown: string): string {
       closeList()
     }
     result.push(`<p>${parseInline(line)}</p>`)
+  }
+
+  // An unterminated fence (file ends before a closing ```) still renders
+  // as a code block rather than silently dropping everything typed into it.
+  if (inCodeBlock) {
+    pushCodeBlock()
   }
 
   closeList()
@@ -278,6 +318,14 @@ function nodeToMarkdown(node: Node): string {
       return `> ${childrenToMarkdown(el)}\n\n`
     case 'hr':
       return '---\n\n'
+    case 'pre': {
+      // TipTap's CodeBlock always nests a <code> child; read straight from
+      // it (skipping parseInline/childrenToMarkdown) so markdown syntax
+      // inside the code text is never reinterpreted as formatting.
+      const codeEl = el.querySelector('code') ?? el
+      const language = codeEl.getAttribute('class')?.match(/language-(\S+)/)?.[1] ?? ''
+      return `\`\`\`${language}\n${codeEl.textContent}\n\`\`\`\n\n`
+    }
     default:
       if (el.getAttribute('style') || el.getAttribute('class')) {
         const serializedChildren = childrenToMarkdown(el)

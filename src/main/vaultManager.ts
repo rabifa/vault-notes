@@ -39,7 +39,7 @@ export interface VaultState {
  */
 function stripMarkdownSyntax(text: string): string {
   return text
-    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/```[^\n]*\n?([\s\S]*?)```/g, '$1')
     .replace(/^\s{0,3}#{1,6}\s+/gm, '')
     .replace(/^\s{0,3}>\s?/gm, '')
     .replace(/^\s*[-*+]\s+\[[ xX]\]\s+/gm, '')
