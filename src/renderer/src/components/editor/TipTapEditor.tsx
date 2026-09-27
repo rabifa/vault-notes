@@ -22,6 +22,7 @@ import { VideoEmbed } from './VideoEmbed'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import { ImageMarkdownInputRule } from './ImageMarkdownInputRule'
+import { VideoMarkdownInputRule } from './VideoMarkdownInputRule'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
 import {
   markdownToHtml,
@@ -214,7 +215,11 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
             return null
           }
         }
-      })
+      }),
+      // Registered after Link/LinkMarkdownInputRule so it runs after their
+      // own auto-linking of the pasted URL - replacing the whole matched
+      // range drops that link mark along with the rest of the text.
+      VideoMarkdownInputRule
     ],
     editorProps: {
       handleClick: (_view, _pos, event) => {
