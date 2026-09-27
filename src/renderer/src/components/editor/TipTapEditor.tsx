@@ -37,7 +37,11 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   'image/gif': 'gif',
   'image/webp': 'webp',
   'image/bmp': 'bmp',
-  'image/svg+xml': 'svg'
+  'image/svg+xml': 'svg',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/ogg': 'ogv',
+  'video/quicktime': 'mov'
 }
 
 // Clipboard screenshots come through as "image/png" almost universally, so
@@ -95,6 +99,31 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       chain.insertContentAt(pos, { type: 'image', attrs: { src, alt } }).run()
     } else {
       chain.setImage({ src, alt }).run()
+    }
+  }
+
+  // Same idea as insertImageFile, but for a local video file (dropped, or
+  // pasted straight as raw bytes) - copied into the vault's attachments the
+  // same way, then embedded as a VideoEmbed node (provider "file") instead
+  // of an image.
+  const insertVideoFile = async (file: File, atNotePath: string, pos?: number): Promise<void> => {
+    const sourceFilePath = window.api.getPathForFile(file)
+    const relativePath = sourceFilePath
+      ? await window.api.vault.saveImageAttachment(atNotePath, sourceFilePath)
+      : await window.api.vault.saveImageAttachmentFromBuffer(
+          atNotePath,
+          new Uint8Array(await file.arrayBuffer()),
+          extensionForMimeType(file.type)
+        )
+
+    const src = resolveNoteImageUrl(relativePath, atNotePath)
+    const alt = file.name.replace(/\.[^.]+$/, '')
+    const attrs = { src, alt, provider: 'file' }
+    const chain = editor.chain().focus()
+    if (pos !== undefined) {
+      chain.insertContentAt(pos, { type: 'videoEmbed', attrs }).run()
+    } else {
+      chain.insertContent({ type: 'videoEmbed', attrs }).run()
     }
   }
 
@@ -238,12 +267,13 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       },
       handlePaste: (_view, event) => {
         if (!notePath) return false
-        const files = Array.from(event.clipboardData?.files ?? []).filter((file) =>
-          file.type.startsWith('image/')
-        )
-        if (files.length > 0) {
+        const allFiles = Array.from(event.clipboardData?.files ?? [])
+        const imageFiles = allFiles.filter((file) => file.type.startsWith('image/'))
+        const videoFiles = allFiles.filter((file) => file.type.startsWith('video/'))
+        if (imageFiles.length > 0 || videoFiles.length > 0) {
           event.preventDefault()
-          files.forEach((file) => void insertImageFile(file, notePath))
+          imageFiles.forEach((file) => void insertImageFile(file, notePath))
+          videoFiles.forEach((file) => void insertVideoFile(file, notePath))
           return true
         }
 
@@ -266,13 +296,14 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       },
       handleDrop: (view, event) => {
         if (!notePath) return false
-        const files = Array.from(event.dataTransfer?.files ?? []).filter((file) =>
-          file.type.startsWith('image/')
-        )
-        if (files.length === 0) return false
+        const allFiles = Array.from(event.dataTransfer?.files ?? [])
+        const imageFiles = allFiles.filter((file) => file.type.startsWith('image/'))
+        const videoFiles = allFiles.filter((file) => file.type.startsWith('video/'))
+        if (imageFiles.length === 0 && videoFiles.length === 0) return false
         event.preventDefault()
         const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos
-        files.forEach((file) => void insertImageFile(file, notePath, pos))
+        imageFiles.forEach((file) => void insertImageFile(file, notePath, pos))
+        videoFiles.forEach((file) => void insertVideoFile(file, notePath, pos))
         return true
       }
     },

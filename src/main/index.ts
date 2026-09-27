@@ -156,8 +156,26 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    // Not awaited (this handler must return synchronously) - caught so a
+    // link/URL the OS can't actually open (e.g. one Chromium's default
+    // drag-and-drop handling tried to open as a "new window" from a file
+    // drop this app doesn't otherwise handle) doesn't surface as an
+    // unhandled promise rejection in the main process.
+    shell.openExternal(details.url).catch((error) => {
+      console.error('Failed to open external URL:', details.url, error)
+    })
     return { action: 'deny' }
+  })
+
+  // Chromium's default action for a file dropped somewhere the renderer
+  // doesn't otherwise handle is to navigate the whole window to it (e.g. a
+  // video file dropped outside the editor, or of a type the editor's own
+  // drop handler doesn't recognize) - blocked here rather than letting the
+  // app's own page get replaced by a raw file view.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== mainWindow?.webContents.getURL()) {
+      event.preventDefault()
+    }
   })
 
   // Escuta eventos do ipcRenderer para controlar a janela
