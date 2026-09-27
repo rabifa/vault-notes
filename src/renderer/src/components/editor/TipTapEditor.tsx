@@ -82,7 +82,15 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       CodeBlockWithCopy,
       Link.configure({
         openOnClick: false,
-        autolink: true,
+        // Left off on purpose: the extension ties its mark's `inclusive`
+        // flag 1:1 to this option, so turning it on made every link
+        // "inclusive" - text typed right after a link kept joining it
+        // instead of starting fresh. Its live-scanning plugin also fought
+        // the markdownLinks input rule below on the same keystroke, so
+        // typing [text](url) never converted until the note was reloaded.
+        // Links are still created via the toolbar, typed markdown syntax,
+        // or pasting - just not from a bare URL typed inline.
+        autolink: false,
         linkOnPaste: true,
         // Off by default in the extension: without it, typing markdown's
         // own [text](url) syntax leaves it as literal text instead of
