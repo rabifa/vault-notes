@@ -601,8 +601,44 @@
   font-family: var(--font-family-mono);
   color: var(--cyan-neon);
   overflow-x: auto;
-  margin: 14px 0;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Code block copy button - the pre's own NodeView wrapper, so the button
+   can float over the block without being part of its editable content. */
+.code-block-wrapper {
+  position: relative;
+  margin: 14px 0;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Always pink-neon so the button's position is visible at a glance
+     without hovering - just faint until then. */
+  color: var(--pink-neon);
+  opacity: 0.75;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Same highlight treatment as .toolbar-btn:hover/.active elsewhere in this
+   panel, so the copy button reads as part of the same icon-button family. */
+.code-copy-btn:hover,
+.code-copy-btn:focus-visible,
+.code-copy-btn.copied {
+  opacity: 1;
+  background-color: rgba(255, 0, 127, 0.1);
+  border-color: rgba(255, 0, 127, 0.3);
 }
 
 .ProseMirror pre code {

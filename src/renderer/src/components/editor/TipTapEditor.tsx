@@ -10,6 +10,7 @@ import TaskItem from '@tiptap/extension-task-item'
 import Link from '@tiptap/extension-link'
 
 import EditorToolbar from './EditorToolbar'
+import { CodeBlockWithCopy } from './CodeBlockWithCopy'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
 import { markdownToHtml, htmlToMarkdown, textToHtml } from '../../utils/markdown'
 
@@ -51,6 +52,8 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
         // "taskItem"/"taskList" duplicates TaskItem's own keymap below.
         link: false,
         listKeymap: false,
+        // Replaced below by CodeBlockWithCopy, which adds a copy button.
+        codeBlock: false,
         // Auto-inserts an empty paragraph after the document's last node
         // whenever it isn't a paragraph. Left enabled so a code block (or
         // heading, etc.) at the end of a note always has an escape
@@ -76,6 +79,7 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       TaskItem.configure({
         nested: true
       }),
+      CodeBlockWithCopy,
       Link.configure({
         openOnClick: false,
         autolink: true,
