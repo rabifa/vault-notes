@@ -20,7 +20,7 @@ import SvgIcon from '../common/SvgIcon'
 interface EditorToolbarProps {
   editor: Editor | null
   onToggleSidebar?: () => void
-  onDeleteNote?: () => void
+  onDeleteNote?: (permanent: boolean) => void
   onDuplicateNote?: () => void
   onCreateNote?: () => void
   isSidebarOpen?: boolean
@@ -71,6 +71,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [isFontOpen, setIsFontOpen] = useState(false)
   const [isColorOpen, setIsColorOpen] = useState(false)
   const [isOverflowOpen, setIsOverflowOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [fontSizeDraft, setFontSizeDraft] = useState(DEFAULT_FONT_SIZE)
   // Which of the two least-essential groups (text formatting, alignment)
   // have been moved into the overflow "more tools" dropdown because they
@@ -79,6 +80,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const fontRef = useRef<HTMLDivElement>(null)
   const colorRef = useRef<HTMLDivElement>(null)
   const overflowRef = useRef<HTMLDivElement>(null)
+  const deleteRef = useRef<HTMLDivElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const group3Ref = useRef<HTMLDivElement>(null)
   const group4Ref = useRef<HTMLDivElement>(null)
@@ -103,6 +105,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       }
       if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
         setIsOverflowOpen(false)
+      }
+      if (deleteRef.current && !deleteRef.current.contains(e.target as Node)) {
+        setIsDeleteOpen(false)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
@@ -316,14 +321,40 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             alt="Sidebar"
           />
         </button>
-        <button
-          className="toolbar-btn"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onDeleteNote}
-          title="Excluir Nota"
-        >
-          <SvgIcon src={trashIcon} size={15} alt="Excluir" />
-        </button>
+        <div className="dropdown-container" ref={deleteRef}>
+          <button
+            className={`toolbar-btn ${isDeleteOpen ? 'active' : ''}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setIsDeleteOpen(!isDeleteOpen)}
+            title="Excluir Nota"
+          >
+            <SvgIcon src={trashIcon} size={15} alt="Excluir" />
+          </button>
+          {isDeleteOpen && (
+            <div className="dropdown-menu delete-dropdown">
+              <button
+                className="dropdown-item"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setIsDeleteOpen(false)
+                  onDeleteNote?.(false)
+                }}
+              >
+                MOVER PARA LIXEIRA
+              </button>
+              <button
+                className="dropdown-item danger"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setIsDeleteOpen(false)
+                  onDeleteNote?.(true)
+                }}
+              >
+                EXCLUIR PERMANENTEMENTE
+              </button>
+            </div>
+          )}
+        </div>
         <button
           className="toolbar-btn"
           onMouseDown={(e) => e.preventDefault()}

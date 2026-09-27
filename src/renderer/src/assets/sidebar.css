@@ -283,6 +283,11 @@
   color: var(--cyan-neon);
 }
 
+.note-card-popover-item.danger:hover {
+  background-color: rgba(255, 59, 59, 0.1);
+  color: #ff3b3b;
+}
+
 .note-card-preview {
   color: rgba(0, 229, 255, 0.65);
   font-size: 11px;
@@ -354,6 +359,10 @@
 }
 
 .note-download-popover-wrap {
+  position: relative;
+}
+
+.note-delete-popover-wrap {
   position: relative;
 }
 

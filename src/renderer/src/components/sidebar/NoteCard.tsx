@@ -8,7 +8,7 @@ interface NoteCardProps {
   onClick: () => void
   onToggleFavorite: (e: React.MouseEvent) => void
   onRename: (newTitle: string) => void
-  onDelete: () => void
+  onDelete: (permanent: boolean) => void
   onChangeExtension: (newExtension: 'md' | 'txt') => void
   onDownload: (extension: 'md' | 'txt') => void
 }
@@ -25,10 +25,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState(note.title)
-  const [openPopover, setOpenPopover] = useState<'extension' | 'download' | null>(null)
+  const [openPopover, setOpenPopover] = useState<'extension' | 'download' | 'delete' | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const extPopoverRef = useRef<HTMLDivElement>(null)
   const downloadPopoverRef = useRef<HTMLDivElement>(null)
+  const deletePopoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isEditing) {
@@ -47,7 +48,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (!openPopover) return
 
     const handleClickOutside = (e: MouseEvent) => {
-      const ref = openPopover === 'extension' ? extPopoverRef : downloadPopoverRef
+      const ref =
+        openPopover === 'extension'
+          ? extPopoverRef
+          : openPopover === 'download'
+            ? downloadPopoverRef
+            : deletePopoverRef
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpenPopover(null)
       }
@@ -68,6 +74,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     e.stopPropagation()
     setOpenPopover(null)
     onDownload(extension)
+  }
+
+  const handleDelete = (e: React.MouseEvent, permanent: boolean) => {
+    e.stopPropagation()
+    setOpenPopover(null)
+    onDelete(permanent)
   }
 
   const startEditing = (e: React.MouseEvent) => {
@@ -195,16 +207,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           >
             <Star size={14} fill={note.isFavorite ? 'var(--pink-neon)' : 'transparent'} />
           </button>
-          <button
-            className="note-card-delete-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete()
-            }}
-            title="Excluir Nota"
-          >
-            <Trash2 size={14} />
-          </button>
+          <div className="note-delete-popover-wrap" ref={deletePopoverRef}>
+            <button
+              className="note-card-delete-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setOpenPopover(openPopover === 'delete' ? null : 'delete')
+              }}
+              title="Excluir Nota"
+            >
+              <Trash2 size={14} />
+            </button>
+            {openPopover === 'delete' && (
+              <div className="note-card-popover note-delete-popover">
+                <button className="note-card-popover-item" onClick={(e) => handleDelete(e, false)}>
+                  MOVER PARA LIXEIRA
+                </button>
+                <button
+                  className="note-card-popover-item danger"
+                  onClick={(e) => handleDelete(e, true)}
+                >
+                  EXCLUIR PERMANENTEMENTE
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

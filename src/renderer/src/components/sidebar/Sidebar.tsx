@@ -30,7 +30,7 @@ interface SidebarProps {
   onAddVault: () => void
   onRemoveVault: (path: string) => void
   onRenameNote: (notePath: string, newTitle: string) => void
-  onDeleteNote: (notePath: string) => void
+  onDeleteNote: (notePath: string, permanent: boolean) => void
   onChangeExtension: (notePath: string, newExtension: 'md' | 'txt') => void
   onDownloadNote: (notePath: string, extension: 'md' | 'txt') => void
   onToggleSidebar?: () => void
@@ -132,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onSelectNote(note.path)}
                 onToggleFavorite={() => onToggleFavorite(note.path)}
                 onRename={(newTitle) => onRenameNote(note.path, newTitle)}
-                onDelete={() => onDeleteNote(note.path)}
+                onDelete={(permanent) => onDeleteNote(note.path, permanent)}
                 onChangeExtension={(newExtension) => onChangeExtension(note.path, newExtension)}
                 onDownload={(extension) => onDownloadNote(note.path, extension)}
               />

@@ -313,6 +313,7 @@
   color: var(--text-muted);
   text-align: left;
   font-size: 11px;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -325,6 +326,15 @@
 .dropdown-item.active {
   background-color: rgba(0, 229, 255, 0.1);
   color: var(--cyan-neon);
+}
+
+.dropdown-item.danger:hover {
+  background-color: rgba(255, 59, 59, 0.1);
+  color: #ff3b3b;
+}
+
+.delete-dropdown {
+  min-width: 150px;
 }
 
 /* Color Dropdown & Palette */
@@ -377,7 +387,11 @@
 .editor-body {
   flex: 1;
   min-width: 0;
-  padding: 12px 0;
+  /* Horizontal padding keeps bordered content (code blocks, blockquotes,
+     ...) from touching the workspace's own scrollbar on the right - the
+     16px matches the rhythm already used by .editor-panel-wrapper and
+     .ProseMirror pre elsewhere in this panel. */
+  padding: 12px 16px;
 }
 
 .editor-workspace.scrollbar-custom::-webkit-scrollbar-thumb {

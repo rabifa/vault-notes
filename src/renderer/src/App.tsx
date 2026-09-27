@@ -86,34 +86,23 @@ export const App = () => {
     await createNote('Sem Titulo', 'md')
   }
 
-  const handleDeleteNoteByPath = (notePath: string) => {
+  const handleDeleteNoteByPath = (notePath: string, permanent: boolean) => {
     setConfirmDialog({
-      title: 'EXCLUIR NOTA',
-      message: 'Como você deseja excluir esta nota?',
-      actions: [
-        {
-          label: 'MOVER PARA LIXEIRA',
-          variant: 'default',
-          onClick: async () => {
-            setConfirmDialog(null)
-            await deleteNote(notePath)
-          }
-        },
-        {
-          label: 'EXCLUIR PERMANENTEMENTE',
-          variant: 'danger',
-          onClick: async () => {
-            setConfirmDialog(null)
-            await deleteNote(notePath, true)
-          }
-        }
-      ]
+      title: permanent ? 'EXCLUIR PERMANENTEMENTE' : 'EXCLUIR NOTA',
+      message: permanent
+        ? 'Tem certeza? A nota será apagada definitivamente e não poderá ser recuperada da lixeira.'
+        : 'Tem certeza que deseja mover esta nota para a lixeira?',
+      confirmLabel: 'EXCLUIR',
+      onConfirm: async () => {
+        setConfirmDialog(null)
+        await deleteNote(notePath, permanent)
+      }
     })
   }
 
-  const handleDeleteNote = () => {
+  const handleDeleteNote = (permanent: boolean) => {
     if (activeNotePath) {
-      handleDeleteNoteByPath(activeNotePath)
+      handleDeleteNoteByPath(activeNotePath, permanent)
     }
   }
 

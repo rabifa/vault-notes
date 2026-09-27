@@ -18,7 +18,7 @@ interface TipTapEditorProps {
   noteExtension: string
   isSidebarOpen?: boolean
   onToggleSidebar?: () => void
-  onDeleteNote?: () => void
+  onDeleteNote?: (permanent: boolean) => void
   onDuplicateNote?: () => void
   onCreateNote?: () => void
   onContentChange: (newContent: string) => void
