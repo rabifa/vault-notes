@@ -705,6 +705,54 @@
   width: 100%;
 }
 
+/* Table edit button - the table's own NodeView wraps .tableWrapper in this
+   extra layer (same reasoning as .code-block-wrapper above) so the button
+   can float over the table without sitting inside its horizontally
+   scrollable content. */
+.table-node-wrapper {
+  position: relative;
+}
+
+.table-edit-menu-container {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: fit-content;
+}
+
+/* Same pink-neon treatment as .code-copy-btn, so both floating node
+   buttons read as one family. */
+.table-edit-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pink-neon);
+  opacity: 0.75;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.table-edit-btn:hover,
+.table-edit-btn:focus-visible,
+.table-edit-btn.active {
+  opacity: 1;
+  background-color: rgba(255, 0, 127, 0.1);
+  border-color: rgba(255, 0, 127, 0.3);
+}
+
+/* Anchored under a button in the table's top-right corner instead of the
+   toolbar, so it opens leftward (left: auto/right: 0) to stay clear of the
+   editor's edge - same override as .toolbar-overflow-menu. */
+.table-edit-dropdown {
+  left: auto;
+  right: 0;
+}
+
 .ProseMirror td,
 .ProseMirror th {
   border: 1px solid var(--border-color);

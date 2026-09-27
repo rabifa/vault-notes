@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Editor } from '@tiptap/react'
-import { Copy, Minus, Plus, MoreHorizontal, Link2, Table, TableProperties } from 'lucide-react'
+import { Copy, Minus, Plus, MoreHorizontal, Link2, Table } from 'lucide-react'
 
 import sidebarEnableIcon from '../../assets/icons/sidebar-anable-icon.svg'
 import sidebarDisableIcon from '../../assets/icons/sidebar-disable-icon.svg'
@@ -73,7 +73,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const [isOverflowOpen, setIsOverflowOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isLinkOpen, setIsLinkOpen] = useState(false)
-  const [isTableMenuOpen, setIsTableMenuOpen] = useState(false)
   const [linkUrlDraft, setLinkUrlDraft] = useState('')
   const [fontSizeDraft, setFontSizeDraft] = useState(DEFAULT_FONT_SIZE)
   // Which of the two least-essential groups (text formatting, alignment)
@@ -85,7 +84,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const overflowRef = useRef<HTMLDivElement>(null)
   const deleteRef = useRef<HTMLDivElement>(null)
   const linkRef = useRef<HTMLDivElement>(null)
-  const tableMenuRef = useRef<HTMLDivElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const group3Ref = useRef<HTMLDivElement>(null)
   const group4Ref = useRef<HTMLDivElement>(null)
@@ -116,9 +114,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       }
       if (linkRef.current && !linkRef.current.contains(e.target as Node)) {
         setIsLinkOpen(false)
-      }
-      if (tableMenuRef.current && !tableMenuRef.current.contains(e.target as Node)) {
-        setIsTableMenuOpen(false)
       }
     }
     document.addEventListener('mousedown', handleOutsideClick)
@@ -545,79 +540,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         >
           <Table size={15} />
         </button>
-
-        {/* Table row/column editing - only meaningful with the cursor
-            inside a table, so the trigger is disabled otherwise rather
-            than hidden (hiding it would change the toolbar's measured
-            width and confuse the overflow-collapse logic above). */}
-        <div className="dropdown-container" ref={tableMenuRef}>
-          <button
-            className={`toolbar-btn ${isTableMenuOpen ? 'active' : ''}`}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.isActive('table') && setIsTableMenuOpen(!isTableMenuOpen)}
-            disabled={!editor.isActive('table')}
-            title={
-              editor.isActive('table') ? 'Editar Tabela' : 'Posicione o cursor dentro de uma tabela'
-            }
-          >
-            <TableProperties size={15} />
-          </button>
-          {isTableMenuOpen && (
-            <div className="dropdown-menu table-edit-dropdown">
-              <button
-                className="dropdown-item"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().addRowAfter().run()
-                  setIsTableMenuOpen(false)
-                }}
-              >
-                ADICIONAR LINHA ABAIXO
-              </button>
-              <button
-                className="dropdown-item"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().addColumnAfter().run()
-                  setIsTableMenuOpen(false)
-                }}
-              >
-                ADICIONAR COLUNA À DIREITA
-              </button>
-              <div className="dropdown-divider-thin" />
-              <button
-                className="dropdown-item danger"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().deleteRow().run()
-                  setIsTableMenuOpen(false)
-                }}
-              >
-                EXCLUIR LINHA
-              </button>
-              <button
-                className="dropdown-item danger"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().deleteColumn().run()
-                  setIsTableMenuOpen(false)
-                }}
-              >
-                EXCLUIR COLUNA
-              </button>
-              <button
-                className="dropdown-item danger"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.chain().focus().deleteTable().run()
-                  setIsTableMenuOpen(false)
-                }}
-              >
-                EXCLUIR TABELA
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* Link */}
         <div className="dropdown-container" ref={linkRef}>

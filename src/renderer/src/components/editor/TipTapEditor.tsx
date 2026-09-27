@@ -15,6 +15,7 @@ import TableCell from '@tiptap/extension-table-cell'
 
 import EditorToolbar from './EditorToolbar'
 import { CodeBlockWithCopy } from './CodeBlockWithCopy'
+import { TableViewWithEditButton } from './TableViewWithEditButton'
 import { TableMarkdownInputRule } from './TableMarkdownInputRule'
 import { LinkMarkdownInputRule } from './LinkMarkdownInputRule'
 import brandIcon from '../../assets/images/vault-notes@16x.png'
@@ -87,7 +88,8 @@ export const TipTapEditor: React.FC<TipTapEditorProps> = ({
       }),
       CodeBlockWithCopy,
       Table.configure({
-        resizable: true
+        resizable: true,
+        View: TableViewWithEditButton
       }),
       TableRow,
       TableHeader,
